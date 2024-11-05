@@ -1,3 +1,3 @@
-import { parseTrainingDataset, parseProductionDataset } from "./src/datasets.js"
+import { parseTrainingXY, parseProductionX } from "./src/datasets.js"
 
-export { parseTrainingDataset, parseProductionDataset }
+export { parseTrainingXY, parseProductionX }

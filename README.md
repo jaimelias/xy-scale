@@ -5,7 +5,7 @@
 
 This repository provides utilities for scaling and preparing datasets in JavaScript, with a primary focus on data preprocessing for machine learning applications. The main functionality includes scaling numerical and categorical data and splitting datasets into training and testing sets.
 
-The primary functions, `parseTrainingDataset` and `parseProductionDataset`, offer a flexible and modular approach to data handling, allowing users to define custom scaling approaches, weighting of features, and specific parsing rules for features and labels.
+The primary functions, `parseTrainingXY` and `parseProductionX`, offer a flexible and modular approach to data handling, allowing users to define custom scaling approaches, weighting of features, and specific parsing rules for features and labels.
 
 ---
 
@@ -17,7 +17,7 @@ The primary functions, `parseTrainingDataset` and `parseProductionDataset`, offe
 
 ## Main Functions
 
-### 1. `parseTrainingDataset`
+### 1. `parseTrainingXY`
 
 This function prepares a dataset for supervised learning by parsing, scaling, and splitting it into training and testing subsets. It includes configurable options for feature weighting and scaling approaches.
 
@@ -25,8 +25,8 @@ This function prepares a dataset for supervised learning by parsing, scaling, an
 - `arrObj` (Array of Objects): Input data array containing all features and labels.
 - `trainingSplit` (Number, optional): Defines the training dataset size (default `0.8`).
 - `weights` (Object, optional): Feature weights for scaling.
-- `parseLabels` (Function): Custom function to parse labels for each object.
-- `parseFeatures` (Function): Custom function to parse features for each object.
+- `yCallbackFunc` (Function): Custom function to parse labels for each object.
+- `xCallbackFunc` (Function): Custom function to parse features for each object.
 - `forceScaling` (String, optional): Forces a specific scaling approach for each feature.
 
 #### Features:
@@ -43,34 +43,34 @@ This function prepares a dataset for supervised learning by parsing, scaling, an
     This adaptive scaling approach ensures the most effective transformation is applied based on each feature's statistical properties.
 
 #### Returns:
-- `trainFeatures`, `trainLabels`, `testFeatures`, `testLabels`: Scaled feature and label arrays for training and testing sets.
-- `trainFeaturesConfig`, `trainLabelsConfig`: Scaling configuration for features and labels.
-- `trainFeaturesKeyNames`, `trainLabelKeyNames`: Key names reflecting feature weights.
+- `trainX`, `trainY`, `testX`, `testY`: Scaled feature and label arrays for training and testing sets.
+- `trainXConfig`, `trainYConfig`: Scaling configuration for features and labels.
+- `trainXKeyNames`, `trainLabelKeyNames`: Key names reflecting feature weights.
 
-### 2. `parseProductionDataset`
+### 2. `parseProductionX`
 
-Designed for production environments, this function parses and scales feature data for unseen production datasets. Like `parseTrainingDataset`, it includes options for feature weighting and scaling.
+Designed for production environments, this function parses and scales feature data for unseen production datasets. Like `parseTrainingXY`, it includes options for feature weighting and scaling.
 
 #### Parameters:
 - `arrObj` (Array of Objects): Input data array for production.
 - `weights` (Object, optional): Feature weights for scaling.
-- `parseFeatures` (Function): Custom function to parse features for each object.
+- `xCallbackFunc` (Function): Custom function to parse features for each object.
 - `forceScaling` (String, optional): Forces a specific scaling approach for each feature.
 
 #### Returns:
-- `productionFeatures`: Scaled feature array for production data.
-- `productionFeaturesConfig`: Scaling configuration for production data.
-- `productionFeaturesKeyNames`: Key names reflecting feature weights.
+- `x`: Scaled feature array for production data.
+- `xConfig`: Scaling configuration for production data.
+- `xKeyNames`: Key names reflecting feature weights.
 
 ## Helper Callback Functions for Custom Data Parsing
 
-### `parseFeatures`
+### `xCallbackFunc`
 
-The `parseFeatures` function is used to extract specific feature values from each row of data, defining what the model will use as input. By selecting relevant fields in the dataset, `parseFeatures` ensures only the necessary values are included in the model’s feature set, allowing for streamlined preprocessing and improved model performance.
+The `xCallbackFunc` function is used to extract specific feature values from each row of data, defining what the model will use as input. By selecting relevant fields in the dataset, `xCallbackFunc` ensures only the necessary values are included in the model’s feature set, allowing for streamlined preprocessing and improved model performance.
 
-### `parseLabels`
+### `yCallbackFunc`
 
-The `parseLabels` function defines the target output (or labels) that the machine learning model will learn to predict. This function typically creates labels by comparing each row of data with a future data point, which is especially useful in time-series data for predictive tasks. In our example, `parseLabels` generates labels based on changes between the current and next rows, which can help the model learn to predict directional trends.
+The `yCallbackFunc` function defines the target output (or labels) that the machine learning model will learn to predict. This function typically creates labels by comparing each row of data with a future data point, which is especially useful in time-series data for predictive tasks. In our example, `yCallbackFunc` generates labels based on changes between the current and next rows, which can help the model learn to predict directional trends.
 
 
 ---
@@ -80,7 +80,7 @@ The `parseLabels` function defines the target output (or labels) that the machin
 1. **Parsing and Splitting a Training Dataset:**
 
     ```javascript
-    import { parseTrainingDataset } from './scale.js';
+    import { parseTrainingXY } from './scale.js';
 
     const myArray = [
         { open: 135.23, high: 137.45, low: 134.56, sma_200: 125.34, sma_100: 130.56 },
@@ -88,7 +88,7 @@ The `parseLabels` function defines the target output (or labels) that the machin
         { open: 137.89, high: 139.34, low: 136.34, sma_200: 127.56, sma_100: 132.78 }
     ];
 
-    const parseFeatures = ({ objRow, index }) => {
+    const xCallbackFunc = ({ objRow, index }) => {
         const curr = objRow[index];
         const { open, high, low, sma_200, sma_100 } = curr;
 
@@ -101,7 +101,7 @@ The `parseLabels` function defines the target output (or labels) that the machin
         };
     };
 
-    const parseLabels = ({ objRow, index }) => {
+    const yCallbackFunc = ({ objRow, index }) => {
         const curr = objRow[index];
         const next = objRow[index + 1];
 
@@ -116,12 +116,12 @@ The `parseLabels` function defines the target output (or labels) that the machin
         };
     };
 
-    const trainingData = parseTrainingDataset({
+    const trainingData = parseTrainingXY({
         arrObj: myArray,
         trainingSplit: 0.75,
         weights: { open: 1, high: 1, low: 1, sma_200: 1, sma_100: 1 },
-        parseLabels,
-        parseFeatures,
+        yCallbackFunc,
+        xCallbackFunc,
         forceScaling: 'normalization'
     });
     ```
@@ -129,9 +129,9 @@ The `parseLabels` function defines the target output (or labels) that the machin
 2. **Parsing a Production Dataset:**
 
     ```javascript
-    import { parseProductionDataset } from './scale.js';
+    import { parseProductionX } from './scale.js';
 
-    const parseFeatures = ({ objRow, index }) => {
+    const xCallbackFunc = ({ objRow, index }) => {
         const curr = objRow[index];
         const { open, high, low, sma_200, sma_100 } = curr;
 
@@ -144,10 +144,10 @@ The `parseLabels` function defines the target output (or labels) that the machin
         };
     };
 
-    const productionData = parseProductionDataset({
+    const productionData = parseProductionX({
         arrObj: productionArray,
         weights: { open: 2, high: 1, low: 1, sma_200: 1, sma_100: 1 },
-        parseFeatures: (row) => row.features,
+        xCallbackFunc: (row) => row.features,
         forceScaling: null
     });
     ```
@@ -156,7 +156,7 @@ The `parseLabels` function defines the target output (or labels) that the machin
 
 ### Upcoming Feature: Optional Precision Handling with Big.js and BigNumber.js
 
-In the next release, we are introducing an optional **precision** feature to enhance decimal precision in financial and scientific datasets. This feature will allow users to integrate **Big.js** or **BigNumber.js** libraries seamlessly into their data processing workflow by adding a new `precision` property to the parameters of `parseTrainingDataset` and `parseProductionDataset`.
+In the next release, we are introducing an optional **precision** feature to enhance decimal precision in financial and scientific datasets. This feature will allow users to integrate **Big.js** or **BigNumber.js** libraries seamlessly into their data processing workflow by adding a new `precision` property to the parameters of `parseTrainingXY` and `parseProductionX`.
 
 #### How Precision Handling Will Work
 
@@ -167,14 +167,14 @@ With the new `precision` property, users can pass either Big.js or BigNumber.js 
     ```javascript
     import Big from 'big.js';
     import BigNumber from 'bignumber.js';
-    import { parseTrainingDataset, parseProductionDataset } from './scale.js';
+    import { parseTrainingXY, parseProductionX } from './scale.js';
 
-    const trainingData = parseTrainingDataset({
+    const trainingData = parseTrainingXY({
         arrObj: myArray,
         trainingSplit: 0.75,
         weights: { open: 1, high: 1, low: 1, sma_200: 1, sma_100: 1 },
-        parseLabels,
-        parseFeatures,
+        yCallbackFunc,
+        xCallbackFunc,
         precision: Big, // Big or BigNumber callbacks for high-precision calculations
         forceScaling: 'normalization'
     });
