@@ -47,7 +47,7 @@ const test = () => {
         forceScaling: 'normalization'
     });
 
-    //console.log(trainingData)
+    //console.log(JSON.stringify(trainingData))
 
 
     const productionData = parseProductionX({
@@ -57,7 +57,7 @@ const test = () => {
         forceScaling: null
     })
 
-    console.log(productionData)
+    console.log(JSON.stringify(productionData))
 
 }
 
