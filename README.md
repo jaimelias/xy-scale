@@ -62,6 +62,17 @@ Designed for production environments, this function parses and scales feature da
 - `productionFeaturesConfig`: Scaling configuration for production data.
 - `productionFeaturesKeyNames`: Key names reflecting feature weights.
 
+## Helper Callback Functions for Custom Data Parsing
+
+### `parseFeatures`
+
+The `parseFeatures` function is used to extract specific feature values from each row of data, defining what the model will use as input. By selecting relevant fields in the dataset, `parseFeatures` ensures only the necessary values are included in the model’s feature set, allowing for streamlined preprocessing and improved model performance.
+
+### `parseLabels`
+
+The `parseLabels` function defines the target output (or labels) that the machine learning model will learn to predict. This function typically creates labels by comparing each row of data with a future data point, which is especially useful in time-series data for predictive tasks. In our example, `parseLabels` generates labels based on changes between the current and next rows, which can help the model learn to predict directional trends.
+
+
 ---
 
 ## Usage Examples
