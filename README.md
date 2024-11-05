@@ -162,7 +162,7 @@ In the next release, we are introducing an optional **precision** feature to enh
 
 With the new `precision` property, users can pass either Big.js or BigNumber.js as callback functions to handle high-precision decimal calculations. This makes the integration fully optional, allowing flexibility based on the precision requirements of the dataset. When `precision` is set, the toolkit will use the specified library for all numeric computations, ensuring high precision and minimizing rounding errors.
 
-**Future Example Usage:**
+1. **Future Example Usage:**
 
     ```javascript
     import Big from 'big.js';
