@@ -8,6 +8,12 @@ The primary functions, `parseTrainingDataset` and `parseProductionDataset`, offe
 
 ---
 
+## Installation
+
+`$ npm i xy-scale`
+
+---
+
 ## Main Functions
 
 ### 1. `parseTrainingDataset`
