@@ -5,7 +5,7 @@
 
 This repository provides utilities for scaling and preparing datasets in JavaScript, with a primary focus on data preprocessing for machine learning applications. The main functionality includes scaling numerical and categorical data and splitting datasets into training and testing sets.
 
-The primary functions, `parseTrainingXY` and `parseProductionX`, offer a flexible and modular approach to data handling, allowing users to define custom scaling approaches, weighting of features, and specific parsing rules for features and labels.
+The primary functions, `parseTrainingXY` and `parseProductionX`, offer a flexible and modular approach to data handling, allowing users to define custom scaling approaches, weighting of X, and specific parsing rules for X and Y.
 
 ---
 
@@ -22,29 +22,29 @@ The primary functions, `parseTrainingXY` and `parseProductionX`, offer a flexibl
 This function prepares a dataset for supervised learning by parsing, scaling, and splitting it into training and testing subsets. It includes configurable options for feature weighting and scaling approaches.
 
 #### Parameters:
-- `arrObj` (Array of Objects): Input data array containing all features and labels.
+- `arrObj` (Array of Objects): Input data array containing all X and Y.
 - `trainingSplit` (Number, optional): Defines the training dataset size (default `0.8`).
 - `weights` (Object, optional): Feature weights for scaling.
-- `yCallbackFunc` (Function): Custom function to parse labels for each object.
-- `xCallbackFunc` (Function): Custom function to parse features for each object.
+- `yCallbackFunc` (Function): Custom function to parse Y for each object.
+- `xCallbackFunc` (Function): Custom function to parse X for each object.
 - `forceScaling` (String, optional): Forces a specific scaling approach for each feature.
 
 #### Features:
-- **Label and Feature Parsing**: Custom parsing for labels and features based on user-defined functions.
-- **Configurable Scaling and Splitting**: Scales features and labels independently and splits data into training and testing sets.
+- **Y and X Parsing**: Custom parsing for Y and X based on user-defined functions.
+- **Configurable Scaling and Splitting**: Scales X and Y independently and splits data into training and testing sets.
 
 #### Scaling Approaches:
 - **Normalization**: Scales values to a range of `[0, 1]`.
 - **Standardization**: Scales values to have a mean of `0` and standard deviation of `1`.
 - **Automatic Selection (Default)**: If `forceScaling = null`, the function automatically selects between `'normalization'` and `'standardization'` for each feature. 
-    - **Normalization** is chosen for features with lower variance (small difference between mean and standard deviation), scaling values to a `[0, 1]` range.
+    - **Normalization** is chosen for X with lower variance (small difference between mean and standard deviation), scaling values to a `[0, 1]` range.
     - **Standardization** is applied when higher variance is detected (large difference between mean and standard deviation), centering values with a mean of `0` and a standard deviation of `1`.
 
     This adaptive scaling approach ensures the most effective transformation is applied based on each feature's statistical properties.
 
 #### Returns:
 - `trainX`, `trainY`, `testX`, `testY`: Scaled feature and label arrays for training and testing sets.
-- `trainXConfig`, `trainYConfig`: Scaling configuration for features and labels.
+- `trainXConfig`, `trainYConfig`: Scaling configuration for X and Y.
 - `trainXKeyNames`, `trainLabelKeyNames`: Key names reflecting feature weights.
 
 ### 2. `parseProductionX`
@@ -54,7 +54,7 @@ Designed for production environments, this function parses and scales feature da
 #### Parameters:
 - `arrObj` (Array of Objects): Input data array for production.
 - `weights` (Object, optional): Feature weights for scaling.
-- `xCallbackFunc` (Function): Custom function to parse features for each object.
+- `xCallbackFunc` (Function): Custom function to parse X for each object.
 - `forceScaling` (String, optional): Forces a specific scaling approach for each feature.
 
 #### Returns:
@@ -70,7 +70,7 @@ The `xCallbackFunc` function is used to extract specific feature values from eac
 
 ### `yCallbackFunc`
 
-The `yCallbackFunc` function defines the target output (or labels) that the machine learning model will learn to predict. This function typically creates labels by comparing each row of data with a future data point, which is especially useful in time-series data for predictive tasks. In our example, `yCallbackFunc` generates labels based on changes between the current and next rows, which can help the model learn to predict directional trends.
+The `yCallbackFunc` function defines the target output (or Y) that the machine learning model will learn to predict. This function typically creates Y by comparing each row of data with a future data point, which is especially useful in time-series data for predictive tasks. In our example, `yCallbackFunc` generates Y based on changes between the current and next rows, which can help the model learn to predict directional trends.
 
 
 ---

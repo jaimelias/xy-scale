@@ -1,41 +1,41 @@
 import { scaleArrayObj } from "./scale.js";
 
 export const parseTrainingXY = ({ arrObj, trainingSplit = 0.8, weights = {}, yCallbackFunc, xCallbackFunc, forceScaling }) => {
-    const features = [];
-    const labels = [];
+    const X = [];
+    const Y = [];
 
     for (let x = 0; x < arrObj.length; x++) {
-        const parsedFeatures = xCallbackFunc({ objRow: arrObj, index: x });
-        const parsedLabels = yCallbackFunc({ objRow: arrObj, index: x });
+        const parsedX = xCallbackFunc({ objRow: arrObj, index: x });
+        const parsedY = yCallbackFunc({ objRow: arrObj, index: x });
 
-        if (parsedFeatures && parsedLabels) {
-            features.push(parsedFeatures)
-            labels.push(parsedLabels)
+        if (parsedX && parsedY) {
+            X.push(parsedX)
+            Y.push(parsedY)
         }
     }
 
-    // Scale features and labels, if applicable
+    // Scale X and Y, if applicable
     const {
-        scaledOutput: scaledFeatures, 
+        scaledOutput: scaledX, 
         scaledConfig: trainXConfig, 
         scaledKeyNames: trainXKeyNames
 
-    } = scaleArrayObj({arrObj: features, weights, forceScaling})
+    } = scaleArrayObj({arrObj: X, weights, forceScaling})
 
     const {
-        scaledOutput: scaledLabels,
+        scaledOutput: scaledY,
         scaledConfig: trainYConfig,
         scaledKeyNames: trainYKeyNames
-    } = scaleArrayObj({arrObj: labels, weights, forceScaling})
+    } = scaleArrayObj({arrObj: Y, weights, forceScaling})
 
-    const splitIndex = Math.floor(scaledFeatures.length * trainingSplit)
+    const splitIndex = Math.floor(scaledX.length * trainingSplit)
 
     // Split into training and testing sets
     return {
-        trainX: scaledFeatures.slice(0, splitIndex),
-        trainY: scaledLabels.slice(0, splitIndex),
-        testX: scaledFeatures.slice(splitIndex),
-        testY: scaledLabels.slice(splitIndex),
+        trainX: scaledX.slice(0, splitIndex),
+        trainY: scaledY.slice(0, splitIndex),
+        testX: scaledX.slice(splitIndex),
+        testY: scaledY.slice(splitIndex),
 
         trainXConfig,
         trainXKeyNames,
@@ -46,29 +46,29 @@ export const parseTrainingXY = ({ arrObj, trainingSplit = 0.8, weights = {}, yCa
 
 
 export const parseProductionX = ({ arrObj, weights = {}, xCallbackFunc, forceScaling }) => {
-    const features = [];
+    const X = [];
 
     for (let x = 0; x < arrObj.length; x++) {
-        const parsedFeatures = xCallbackFunc({ objRow: arrObj, index: x })
+        const parsedX = xCallbackFunc({ objRow: arrObj, index: x })
 
-        if (parsedFeatures) {
-            features.push(parsedFeatures)
+        if (parsedX) {
+            X.push(parsedX)
         }
     }
 
-    // Scale features and labels, if applicable
-    // Scale features and labels, if applicable
+    // Scale X and Y, if applicable
+    // Scale X and Y, if applicable
     const {
-        scaledOutput: scaledFeatures, 
+        scaledOutput: scaledX, 
         scaledConfig: xConfig, 
         scaledKeyNames: xKeyNames
 
-    } = scaleArrayObj({arrObj: features, weights, forceScaling})
+    } = scaleArrayObj({arrObj: X, weights, forceScaling})
 
 
     // Split into training and testing sets
     return {
-        x: scaledFeatures,
+        x: scaledX,
         xConfig,
         xKeyNames
     }
