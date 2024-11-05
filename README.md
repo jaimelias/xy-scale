@@ -166,7 +166,7 @@ With the new `precision` property, users can pass either Big.js or BigNumber.js 
 
     ```javascript
     import Big from 'big.js';
-    import BigNumber from "bignumber.js";
+    import BigNumber from 'bignumber.js';
     import { parseTrainingDataset, parseProductionDataset } from './scale.js';
 
     const trainingData = parseTrainingDataset({
@@ -175,7 +175,7 @@ With the new `precision` property, users can pass either Big.js or BigNumber.js 
         weights: { open: 1, high: 1, low: 1, sma_200: 1, sma_100: 1 },
         parseLabels,
         parseFeatures,
-        precision: Big, // Big or BigNumber for high-precision calculations
+        precision: Big, // Big or BigNumber callbacks for high-precision calculations
         forceScaling: 'normalization'
     });
     ```
