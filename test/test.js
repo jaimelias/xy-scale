@@ -47,13 +47,13 @@ const test = () => {
         forceScaling: 'normalization'
     });
 
-    console.log(trainingData)
+    //console.log(trainingData)
 
 
     const productionData = parseProductionX({
         arrObj: myArray,
         weights: { open: 2, high: 1, low: 1, sma_200: 1, sma_100: 1 },
-        xCallbackFunc: (row) => row.features,
+        xCallbackFunc,
         forceScaling: null
     })
 

@@ -147,7 +147,7 @@ The `yCallbackFunc` function defines the target output (or labels) that the mach
     const productionData = parseProductionX({
         arrObj: productionArray,
         weights: { open: 2, high: 1, low: 1, sma_200: 1, sma_100: 1 },
-        xCallbackFunc: (row) => row.features,
+        xCallbackFunc,
         forceScaling: null
     });
     ```
