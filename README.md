@@ -28,6 +28,7 @@ This function prepares a dataset for supervised learning by parsing, scaling, an
 - `yCallbackFunc` (Function): Custom function to parse Y for each object.
 - `xCallbackFunc` (Function): Custom function to parse X for each object.
 - `forceScaling` (String, optional): Forces a specific scaling approach for each feature.
+- `timeSteps` (Number, optional): Transforms a one-dimensional array into an array of overlapping sequences (timesteps), each of a specified length. Default is 0 returning original output.
 
 #### Features:
 - **Y and X Parsing**: Custom parsing for Y and X based on user-defined functions.
@@ -56,6 +57,7 @@ Designed for production environments, this function parses and scales feature da
 - `weights` (Object, optional): Feature weights for scaling.
 - `xCallbackFunc` (Function): Custom function to parse X for each object.
 - `forceScaling` (String, optional): Forces a specific scaling approach for each feature.
+- `timeSteps` (Number, optional): Transforms a one-dimensional array into an array of overlapping sequences (timesteps), each of a specified length. Default is 0 returning original output.
 
 #### Returns:
 - `x`: Scaled feature array for production data.
@@ -122,7 +124,8 @@ The `yCallbackFunc` function defines the target output (or Y) that the machine l
         weights: { open: 1, high: 1, low: 1, sma_200: 1, sma_100: 1 },
         yCallbackFunc,
         xCallbackFunc,
-        forceScaling: 'normalization'
+        forceScaling: 'normalization',
+        timeSteps: 0
     });
 ```
 
@@ -159,7 +162,8 @@ The `yCallbackFunc` function defines the target output (or Y) that the machine l
         arrObj: myArray,
         weights: { open: 2, high: 1, low: 1, sma_200: 1, sma_100: 1 },
         xCallbackFunc,
-        forceScaling: null
+        forceScaling: null,
+        timeSteps: 0
     });
 ```
 
@@ -199,7 +203,8 @@ With the new `precision` property, users can pass either Big.js or BigNumber.js 
         yCallbackFunc,
         xCallbackFunc,
         precision: Big, // Big or BigNumber callbacks for high-precision calculations
-        forceScaling: 'normalization'
+        forceScaling: 'normalization',
+        timeSteps: 0
     });
 ```
 
