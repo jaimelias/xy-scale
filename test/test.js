@@ -44,7 +44,8 @@ const test = () => {
         weights: { open: 1, high: 1, low: 1, sma_200: 1, sma_100: 1 },
         yCallbackFunc,
         xCallbackFunc,
-        forceScaling: 'normalization'
+        forceScaling: 'normalization',
+        timeSteps: 0
     });
 
     //console.log(JSON.stringify(trainingData))
@@ -54,7 +55,8 @@ const test = () => {
         arrObj: myArray,
         weights: { open: 2, high: 1, low: 1, sma_200: 1, sma_100: 1 },
         xCallbackFunc,
-        forceScaling: null
+        forceScaling: null,
+        timeSteps: 0
     })
 
     console.log(JSON.stringify(productionData))

@@ -1,6 +1,21 @@
 import { scaleArrayObj } from "./scale.js";
 
-export const parseTrainingXY = ({ arrObj, trainingSplit = 0.8, weights = {}, yCallbackFunc, xCallbackFunc, forceScaling }) => {
+const arrayToTimesteps = (arr, timeSteps) => {
+    if (timeSteps === 0) return arr;
+    if (timeSteps < 0) throw new Error("timeSteps must be greater than 0");
+    
+    const timestepsArray = [];
+    
+    for (let i = 0; i <= arr.length - timeSteps; i++) {
+        timestepsArray.push(arr.slice(i, i + timeSteps));
+    }
+    
+    return timestepsArray;
+}
+
+
+
+export const parseTrainingXY = ({ arrObj, trainingSplit = 0.8, weights = {}, yCallbackFunc, xCallbackFunc, forceScaling, timeSteps = 0 }) => {
     const X = [];
     const Y = [];
 
@@ -32,10 +47,10 @@ export const parseTrainingXY = ({ arrObj, trainingSplit = 0.8, weights = {}, yCa
 
     // Split into training and testing sets
     return {
-        trainX: scaledX.slice(0, splitIndex),
-        trainY: scaledY.slice(0, splitIndex),
-        testX: scaledX.slice(splitIndex),
-        testY: scaledY.slice(splitIndex),
+        trainX: arrayToTimesteps(scaledX.slice(0, splitIndex), timeSteps),
+        trainY: arrayToTimesteps(scaledY.slice(0, splitIndex), timeSteps),
+        testX: arrayToTimesteps(scaledX.slice(splitIndex), timeSteps),
+        testY: arrayToTimesteps(scaledY.slice(splitIndex), timeSteps),
 
         trainXConfig,
         trainXKeyNames,
@@ -45,7 +60,7 @@ export const parseTrainingXY = ({ arrObj, trainingSplit = 0.8, weights = {}, yCa
 };
 
 
-export const parseProductionX = ({ arrObj, weights = {}, xCallbackFunc, forceScaling }) => {
+export const parseProductionX = ({ arrObj, weights = {}, xCallbackFunc, forceScaling, timeSteps = 0 }) => {
     const X = [];
 
     for (let x = 0; x < arrObj.length; x++) {
@@ -68,7 +83,7 @@ export const parseProductionX = ({ arrObj, weights = {}, xCallbackFunc, forceSca
 
     // Split into training and testing sets
     return {
-        x: scaledX,
+        x: arrayToTimesteps(scaledX, timeSteps),
         xConfig,
         xKeyNames
     }
