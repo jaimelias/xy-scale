@@ -113,6 +113,19 @@ Designed for production environments, this function parses and scales feature da
     ```javascript
     import { parseProductionDataset } from './scale.js';
 
+    const parseFeatures = ({ objRow, index }) => {
+        const curr = objRow[index];
+        const { open, high, low, sma_200, sma_100 } = curr;
+
+        return {
+            open,
+            high,
+            low,
+            sma_200,
+            sma_100
+        };
+    };
+
     const productionData = parseProductionDataset({
         arrObj: productionArray,
         weights: { open: 2, high: 1, low: 1, sma_200: 1, sma_100: 1 },
