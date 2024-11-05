@@ -154,6 +154,34 @@ The `parseLabels` function defines the target output (or labels) that the machin
 
 ---
 
+### Upcoming Feature: Optional Precision Handling with Big.js and BigNumber.js
+
+In the next release, we are introducing an optional **precision** feature to enhance decimal precision in financial and scientific datasets. This feature will allow users to integrate **Big.js** or **BigNumber.js** libraries seamlessly into their data processing workflow by adding a new `precision` property to the parameters of `parseTrainingDataset` and `parseProductionDataset`.
+
+#### How Precision Handling Will Work
+
+With the new `precision` property, users can pass either Big.js or BigNumber.js as callback functions to handle high-precision decimal calculations. This makes the integration fully optional, allowing flexibility based on the precision requirements of the dataset. When `precision` is set, the toolkit will use the specified library for all numeric computations, ensuring high precision and minimizing rounding errors.
+
+**Future Example Usage:**
+
+    ```javascript
+    import Big from 'big.js';
+    import BigNumber from "bignumber.js";
+    import { parseTrainingDataset, parseProductionDataset } from './scale.js';
+
+    const trainingData = parseTrainingDataset({
+        arrObj: myArray,
+        trainingSplit: 0.75,
+        weights: { open: 1, high: 1, low: 1, sma_200: 1, sma_100: 1 },
+        parseLabels,
+        parseFeatures,
+        precision: Big, // Big or BigNumber for high-precision calculations
+        forceScaling: 'normalization'
+    });
+    ```
+
+---
+
 ## Technical Details
 
 - **Error Handling**: Validates scaling approach values and ensures positive feature weights.
