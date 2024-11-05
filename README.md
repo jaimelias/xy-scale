@@ -1,4 +1,5 @@
-# Scale Array Object Utility for Data Processing - GitHub Repository
+#  xy-scale.js | Machine Learning Data Preparation Toolkit: XY Splitting, Feature Weighting, Standardization, and Normalization in JavaScript
+
 
 ## Overview
 
