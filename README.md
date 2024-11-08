@@ -25,8 +25,8 @@ This function prepares a dataset for supervised learning by parsing, scaling, an
 - `arrObj` (Array of Objects): Input data array containing all X and Y.
 - `trainingSplit` (Number, optional): Defines the training dataset size (default `0.8`).
 - `weights` (Object, optional): Feature weights for scaling.
-- `yCallbackFunc` (Function): Custom function to parse Y for each object.
-- `xCallbackFunc` (Function): Custom function to parse X for each object.
+- `yCallbackFunc` (Function): Custom function to parse Y for each object. Return null or undefined to exclude it from training.
+- `xCallbackFunc` (Function): Custom function to parse X for each object. Return null or undefined to exclude it from training.
 - `forceScaling` (String, optional): Forces a specific scaling approach for each feature.
 - `timeSteps` (Number, optional): Transforms a one-dimensional array into an array of overlapping sequences (timesteps), each of a specified length. Default is 0 returning original output.
 
@@ -45,8 +45,8 @@ This function prepares a dataset for supervised learning by parsing, scaling, an
 
 #### Returns:
 - `trainX`, `trainY`, `testX`, `testY`: Scaled feature and label arrays for training and testing sets.
-- `trainXConfig`, `trainYConfig`: Scaling configuration for X and Y.
-- `trainXKeyNames`, `trainLabelKeyNames`: Key names reflecting feature weights.
+- `configX`, `configY`: Scaling configuration for X and Y.
+- `keyNamesX`, `trainLabelKeyNames`: Key names reflecting feature weights.
 
 ### 2. `parseProductionX`
 
@@ -55,14 +55,14 @@ Designed for production environments, this function parses and scales feature da
 #### Parameters:
 - `arrObj` (Array of Objects): Input data array for production.
 - `weights` (Object, optional): Feature weights for scaling.
-- `xCallbackFunc` (Function): Custom function to parse X for each object.
+- `xCallbackFunc` (Function): Custom function to parse X for each object. Return null or undefined to exclude it from production.
 - `forceScaling` (String, optional): Forces a specific scaling approach for each feature.
 - `timeSteps` (Number, optional): Transforms a one-dimensional array into an array of overlapping sequences (timesteps), each of a specified length. Default is 0 returning original output.
 
 #### Returns:
-- `x`: Scaled feature array for production data.
-- `xConfig`: Scaling configuration for production data.
-- `xKeyNames`: Key names reflecting feature weights.
+- `X`: Scaled feature array for production data.
+- `configX`: Scaling configuration for production data.
+- `keyNamesX`: Key names reflecting feature weights.
 
 ## Helper Callback Functions for Custom Data Parsing
 
@@ -107,6 +107,7 @@ The `yCallbackFunc` function defines the target output (or Y) that the machine l
         const curr = objRow[index];
         const next = objRow[index + 1];
 
+        //returning null or undefined will exclude current row X and Y from training
         if (typeof next === 'undefined') return null;
 
         return {
@@ -118,7 +119,14 @@ The `yCallbackFunc` function defines the target output (or Y) that the machine l
         };
     };
 
-    const trainingData = parseTrainingXY({
+    const const {
+        trainX,
+        trainY,
+        testX,
+        testY,
+        configX,
+        keyNamesX,
+    } = parseTrainingXY({
         arrObj: myArray,
         trainingSplit: 0.75,
         weights: { open: 1, high: 1, low: 1, sma_200: 1, sma_100: 1 },
@@ -127,17 +135,16 @@ The `yCallbackFunc` function defines the target output (or Y) that the machine l
         forceScaling: 'normalization',
         timeSteps: 0
     });
+
+    
 ```
 
-**Output:**
-```json
-    {"trainX":[[0,0,0,0,0]],"trainY":[[0,0,0,0,0]],"testX":[[1,1,1,1,1]],"testY":[[0,0,0,0,0]],"trainXConfig":{"min":{"open":135.23,"high":137.45,"low":134.56,"sma_200":125.34,"sma_100":130.56},"max":{"open":136.45,"high":138.67,"low":135.67,"sma_200":126.78,"sma_100":131.45},"std":{"open":0.8626702730475972,"high":0.8626702730475772,"low":0.7848885271170473,"sma_200":1.0182337649086268,"sma_100":0.6293250352560177},"mean":{"open":135.83999999999997,"high":138.06,"low":135.115,"sma_200":126.06,"sma_100":131.005},"approach":{"open":"normalization","high":"normalization","low":"normalization","sma_200":"normalization","sma_100":"normalization"},"inputTypes":{"open":"number","high":"number","low":"number","sma_200":"number","sma_100":"number"},"uniqueStringIndexes":{}},"trainXKeyNames":["open","high","low","sma_200","sma_100"],"trainYConfig":{"min":{"label_1":true,"label_2":true,"label_3":true,"label_4":true,"label_5":true},"max":{"label_1":true,"label_2":true,"label_3":true,"label_4":true,"label_5":true},"std":{"label_1":0,"label_2":0,"label_3":0,"label_4":0,"label_5":0},"mean":{"label_1":1,"label_2":1,"label_3":1,"label_4":1,"label_5":1},"approach":{"label_1":"normalization","label_2":"normalization","label_3":"normalization","label_4":"normalization","label_5":"normalization"},"inputTypes":{"label_1":"boolean","label_2":"boolean","label_3":"boolean","label_4":"boolean","label_5":"boolean"},"uniqueStringIndexes":{}},"trainYKeyNames":["label_1","label_2","label_3","label_4","label_5"]}
-```
 
 2. **Parsing a Production Dataset:**
 
 ```javascript
-    import { parseProductionX } from './scale.js';
+    import { parseProductionX } from './scale.js'
+    import {descaleArrayObj} from './descale.js'
 
     const xCallbackFunc = ({ objRow, index }) => {
         const curr = objRow[index];
@@ -158,19 +165,17 @@ The `yCallbackFunc` function defines the target output (or Y) that the machine l
         { open: 137.89, high: 139.34, low: 136.34, sma_200: 127.56, sma_100: 132.78 }
     ];
 
-    const productionData = parseProductionX({
+    const {X, configX, keyNamesX} = parseProductionX({
         arrObj: myArray,
         weights: { open: 2, high: 1, low: 1, sma_200: 1, sma_100: 1 },
         xCallbackFunc,
         forceScaling: null,
         timeSteps: 0
     });
-```
 
-**Output:**
+    console.log('productionData.X', productionData.X)
+    console.log('descaled array be equal to myArray', descaleArrayObj({scaled: X, config: configX, keyNames: keyNamesX}))
 
-```json
-        {"x":[[-0.9713243322194223,-0.9713243322194223,0,0,-1.0832575234857975,-0.9278787875246485],[-0.05507509100212526,-0.05507509100212526,0.6455026455026398,0.6235955056179688,0.19534152062858562,-0.1312754554697336],[1.026399423221569,1.026399423221569,1,1,0.887916002857212,1.059154242994382]],"xConfig":{"min":{"open":135.23,"high":137.45,"low":134.56,"sma_200":125.34,"sma_100":130.56},"max":{"open":137.89,"high":139.34,"low":136.34,"sma_200":127.56,"sma_100":132.78},"std":{"open":1.3315154273733958,"high":0.9582449234581516,"low":0.899017982764145,"sma_200":1.1262326580240862,"sma_100":1.1172436320397328},"mean":{"open":136.5233333333333,"high":138.48666666666668,"low":135.52333333333334,"sma_200":126.56,"sma_100":131.59666666666666},"approach":{"open":"standardization","high":"normalization","low":"normalization","sma_200":"standardization","sma_100":"standardization"},"inputTypes":{"open":"number","high":"number","low":"number","sma_200":"number","sma_100":"number"},"uniqueStringIndexes":{}},"xKeyNames":["open","open","high","low","sma_200","sma_100"]}
 ```
 
 ---

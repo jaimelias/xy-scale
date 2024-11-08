@@ -1,46 +1,34 @@
 import { scaleArrayObj } from "./scale.js";
-
-const arrayToTimesteps = (arr, timeSteps) => {
-    if (timeSteps === 0) return arr;
-    if (timeSteps < 0) throw new Error("timeSteps must be greater than 0");
-    
-    const timestepsArray = [];
-    
-    for (let i = 0; i <= arr.length - timeSteps; i++) {
-        timestepsArray.push(arr.slice(i, i + timeSteps));
-    }
-    
-    return timestepsArray;
-}
-
+import { arrayToTimesteps } from "./timeSteps.js";
 
 
 export const parseTrainingXY = ({ arrObj, trainingSplit = 0.8, weights = {}, yCallbackFunc, xCallbackFunc, forceScaling, timeSteps = 0 }) => {
     const X = [];
     const Y = [];
 
+    //if parsedX and parsedY is undefined or null the current row will be excluded from training or production
     for (let x = 0; x < arrObj.length; x++) {
         const parsedX = xCallbackFunc({ objRow: arrObj, index: x });
         const parsedY = yCallbackFunc({ objRow: arrObj, index: x });
-
-        if (parsedX && parsedY) {
-            X.push(parsedX)
-            Y.push(parsedY)
+    
+        if (parsedX !== undefined && parsedX !== null && parsedY !== undefined && parsedY !== null) {
+            X.push(parsedX);
+            Y.push(parsedY);
         }
     }
 
     // Scale X and Y, if applicable
     const {
         scaledOutput: scaledX, 
-        scaledConfig: trainXConfig, 
-        scaledKeyNames: trainXKeyNames
+        scaledConfig: configX, 
+        scaledKeyNames: keyNamesX
 
     } = scaleArrayObj({arrObj: X, weights, forceScaling})
 
     const {
         scaledOutput: scaledY,
-        scaledConfig: trainYConfig,
-        scaledKeyNames: trainYKeyNames
+        scaledConfig: configY,
+        scaledKeyNames: keyNamesY
     } = scaleArrayObj({arrObj: Y, weights, forceScaling})
 
     const splitIndex = Math.floor(scaledX.length * trainingSplit)
@@ -52,10 +40,10 @@ export const parseTrainingXY = ({ arrObj, trainingSplit = 0.8, weights = {}, yCa
         testX: arrayToTimesteps(scaledX.slice(splitIndex), timeSteps),
         testY: arrayToTimesteps(scaledY.slice(splitIndex), timeSteps),
 
-        trainXConfig,
-        trainXKeyNames,
-        trainYConfig,
-        trainYKeyNames
+        configX,
+        keyNamesX,
+        configY,
+        keyNamesY
     };
 };
 
@@ -75,16 +63,16 @@ export const parseProductionX = ({ arrObj, weights = {}, xCallbackFunc, forceSca
     // Scale X and Y, if applicable
     const {
         scaledOutput: scaledX, 
-        scaledConfig: xConfig, 
-        scaledKeyNames: xKeyNames
+        scaledConfig: configX, 
+        scaledKeyNames: keyNamesX
 
     } = scaleArrayObj({arrObj: X, weights, forceScaling})
 
 
     // Split into training and testing sets
     return {
-        x: arrayToTimesteps(scaledX, timeSteps),
-        xConfig,
-        xKeyNames
+        X: arrayToTimesteps(scaledX, timeSteps),
+        configX,
+        keyNamesX
     }
 };
