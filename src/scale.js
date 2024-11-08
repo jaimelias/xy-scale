@@ -1,16 +1,12 @@
-
-
 export const scaleArrayObj = ({arrObj, weights = {}, forceScaling = null}) => {
 
-    if(forceScaling !== null  && forceScaling !== 'normalization' && forceScaling !==  'standardization')
-    {
-        throw Error('forceScalling should be null, "normalization" or "standardization"')
+    if (forceScaling !== null && forceScaling !== 'normalization' && forceScaling !== 'standardization') {
+        throw Error('forceScaling should be null, "normalization" or "standardization"');
     }
 
     const n = arrObj.length;
 
     if (n === 0) {
-        // If the input array is empty, return empty outputs
         return {
             scaledOutput: [],
             scaledConfig: {},
@@ -18,36 +14,22 @@ export const scaleArrayObj = ({arrObj, weights = {}, forceScaling = null}) => {
         };
     }
 
-    // Get the feature names (keys) from the first object
     const keyNames = Object.keys(arrObj[0]);
 
-    // **Loop 1: Compute weights for each keyName**
     const keyNameWeights = keyNames.map(key => {
-        if (weights.hasOwnProperty(key)) {
-            const weight = weights[key];
-            if (weight <= 0) {
-                throw new Error(`Weight for key "${key}" must be positive.`);
-            }
-            return weight;
-        } else {
-            return 1; // Default weight
-        }
+        return weights.hasOwnProperty(key) ? Math.max(weights[key], 1) : 1;
     });
 
     const totalColumns = keyNameWeights.reduce((sum, weight) => sum + weight, 0);
 
-    // **Loop 2: Build the new keyNames array with weights applied**
     const outputKeyNames = new Array(totalColumns);
     let idx = 0;
     for (let i = 0; i < keyNames.length; i++) {
-        const key = keyNames[i];
-        const weight = keyNameWeights[i];
-        for (let w = 0; w < weight; w++) {
-            outputKeyNames[idx++] = key;
+        for (let w = 0; w < keyNameWeights[i]; w++) {
+            outputKeyNames[idx++] = keyNames[i];
         }
     }
 
-    // Initialize variables for scaling
     const inputTypes = {};
     const min = {};
     const max = {};
@@ -57,7 +39,6 @@ export const scaleArrayObj = ({arrObj, weights = {}, forceScaling = null}) => {
     const uniqueStringIndexes = {};
     const counts = {};
 
-    // **Loop 3: Initialize variables for each key**
     for (const key of keyNames) {
         const firstValue = arrObj[0][key];
         inputTypes[key] = typeof firstValue;
@@ -73,7 +54,6 @@ export const scaleArrayObj = ({arrObj, weights = {}, forceScaling = null}) => {
         counts[key] = 0;
     }
 
-    // **Loop 4: Single pass to process data**
     for (const obj of arrObj) {
         for (const key of keyNames) {
             let value = obj[key];
@@ -84,11 +64,11 @@ export const scaleArrayObj = ({arrObj, weights = {}, forceScaling = null}) => {
                     uniqueIndexes[value] = Object.keys(uniqueIndexes).length;
                 }
                 value = uniqueIndexes[value];
-                obj[key] = value; 
+                obj[key] = value;
             }
 
-            if (value < min[key]) min[key] = value;
-            if (value > max[key]) max[key] = value;
+            min[key] = Math.min(min[key], value);
+            max[key] = Math.max(max[key], value);
 
             counts[key]++;
             const delta = value - mean[key];
@@ -97,20 +77,19 @@ export const scaleArrayObj = ({arrObj, weights = {}, forceScaling = null}) => {
         }
     }
 
-    // **Loop 5: Finalize standard deviation and decide scaling approach**
     const std = {};
     for (const key of keyNames) {
         std[key] = counts[key] > 1 ? Math.sqrt(M2[key] / (counts[key] - 1)) : 0;
 
-        // Apply forceScaling if specified, else use automatic selection
         if (forceScaling === 'normalization' || forceScaling === 'standardization') {
             approach[key] = forceScaling;
+        } else if (min[key] === 0 && max[key] === 1) {
+            approach[key] = 'none';  // No scaling required
         } else {
             approach[key] = std[key] < 1 ? 'normalization' : 'standardization';
         }
     }
 
-    // **Loop 6: Create scaled and reweighted output**
     const scaledOutput = new Array(n);
     for (let i = 0; i < n; i++) {
         const obj = arrObj[i];
@@ -125,7 +104,9 @@ export const scaleArrayObj = ({arrObj, weights = {}, forceScaling = null}) => {
             const stdValue = std[key];
 
             let scaledValue;
-            if (approach[key] === 'normalization') {
+            if (approach[key] === 'none') {
+                scaledValue = value;  // No scaling
+            } else if (approach[key] === 'normalization') {
                 scaledValue = maxValue !== minValue ? (value - minValue) / (maxValue - minValue) : 0;
             } else {
                 scaledValue = stdValue !== 0 ? (value - meanValue) / stdValue : 0;
