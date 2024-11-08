@@ -52,7 +52,7 @@ const test = async () => {
 
     //console.log(JSON.stringify(trainingData))
 
-    console.log('testX', testX[0])
+    console.log('testX', testX.slice(-2))
     const descaled = descaleArrayObj({scaled: testX, config: configX, keyNames: keyNamesX, timeSteps})
 
     //comparing descaled values with the last values of input myArray

@@ -64,7 +64,9 @@ Designed for production environments, this function parses and scales feature da
 - `configX`: Scaling configuration for production data.
 - `keyNamesX`: Key names reflecting feature weights.
 
-## Helper Callback Functions for Custom Data Parsing
+---
+
+## Helper Functions for Custom Data Parsing
 
 ### `xCallbackFunc`
 
@@ -74,6 +76,21 @@ The `xCallbackFunc` function is used to extract specific feature values from eac
 
 The `yCallbackFunc` function defines the target output (or Y) that the machine learning model will learn to predict. This function typically creates Y by comparing each row of data with a future data point, which is especially useful in time-series data for predictive tasks. In our example, `yCallbackFunc` generates Y based on changes between the current and next rows, which can help the model learn to predict directional trends.
 
+
+### 3. `descaleArrayObj`
+
+The `descaleArrayObj` function reverses the scaling applied to a dataset, reconstructing the original values from the scaled data. It supports both normalization and standardization approaches, making it compatible with the scaled outputs of `parseTrainingXY` and `parseProductionX`.
+
+
+#### Parameters:
+- `scaled`: scaled array returned from `parseTrainingXY` (`trainX`, `trainY`, `testX` or `testY`) or `parseProductionX` (`X`).
+- `config`: config object returned from `parseTrainingXY` (`configX`, `configY`) or `parseProductionX` (`configX`).
+- `keyNames`: keyNames array returned from `parseTrainingXY` (`keyNamesX`, `keyNamesY`) or `parseProductionX` (`keyNamesX`).
+- `timeSteps`: input numeric timeSteps param submited to `parseTrainingXY` or `parseProductionX`. Defaults to 0. 
+
+#### Returns:
+
+The output of this function in an array of objects similar or equal to the input array of objects submited to `parseTrainingXY` or `parseProductionX`.
 
 ---
 
