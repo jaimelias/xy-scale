@@ -113,27 +113,32 @@ An array of sub-arrays, where each sub-array contains `timeSteps` consecutive el
 1. **Parsing and Splitting a Training Dataset:**
 
 ```javascript
-    import { parseTrainingXY } from './scale.js';
+    import { parseTrainingXY, arrayToTimesteps } from 'xy-scale';
+    import { loadFile } from "./test/fs.js" 
+    import * as tf from '@tensorflow/tfjs-node';
 
-    const myArray = [
-        { open: 135.23, high: 137.45, low: 134.56, sma_200: 125.34, sma_100: 130.56 },
-        { open: 136.45, high: 138.67, low: 135.67, sma_200: 126.78, sma_100: 131.45 },
-        { open: 137.89, high: 139.34, low: 136.34, sma_200: 127.56, sma_100: 132.78 }
-    ];
-
+    // [{open, high, low, close}, {open, high, low, close}]
+    const myArray = await loadFile({fileName: '1d-spy.json', pathName: 'datasets'}) //file in /datasets/1d-spy.json
+    
+    //callback function used to prepare X before scaling
     const xCallbackFunc = ({ objRow, index }) => {
-        const curr = objRow[index];
-        const { open, high, low, sma_200, sma_100 } = curr;
+        const curr = objRow[index]
+        const prev = objRow[index - 1]
+
+        //returning null or undefined will exclude current row X and Y from training
+        if(typeof prev === 'undefined') return null
+
+        const { open, high, low, close } = curr
 
         return {
-            open,
-            high,
-            low,
-            sma_200,
-            sma_100
-        };
-    };
+            change: open - prev.close,
+            top: high - Math.max(open, close),
+            bottom: low - Math.min(open, close),
+            body: open-close,
+        }
+    }
 
+    //callback function used to prepare Y before scaling
     const yCallbackFunc = ({ objRow, index }) => {
         const curr = objRow[index];
         const next = objRow[index + 1];
@@ -142,15 +147,12 @@ An array of sub-arrays, where each sub-array contains `timeSteps` consecutive el
         if (typeof next === 'undefined') return null;
 
         return {
-            label_1: next.open > curr.open,       // Label indicating if the next open price is higher than the current
-            label_2: next.high > curr.high,       // Label indicating if the next high price is higher than the current
-            label_3: next.low > curr.low,         // Label indicating if the next low price is higher than the current
-            label_4: next.sma_200 > curr.sma_200, // Label indicating if the next 200-day SMA is higher than the current
-            label_5: next.sma_100 > curr.sma_100  // Label indicating if the next 100-day SMA is higher than the current
+            label_1: next.open > curr.close,
+            label_2: next.close > curr.close,
         };
     };
-
-    const const {
+    
+    const {
         trainX,
         trainY,
         testX,
@@ -159,86 +161,32 @@ An array of sub-arrays, where each sub-array contains `timeSteps` consecutive el
         keyNamesX,
     } = parseTrainingXY({
         arrObj: myArray,
-        trainingSplit: 0.75,
-        weights: { open: 1, high: 1, low: 1, sma_200: 1, sma_100: 1 },
+        trainingSplit: 0.90,
         yCallbackFunc,
         xCallbackFunc,
-        forceScaling: 'normalization'
+        forceScaling: 'normalization',
     });
 
+
+    console.log('testX', testX.slice(-2))
+
+
+    const timeSteps = 10
+    const colsX = trainX[0].length
+    const colsY = trainY[0].length
+    const timeSteppedTrainX = arrayToTimesteps(trainX, timeSteps)
+    const trimedTrainY = trainY.slice(timeSteps-1)
+
+
+    console.log([trainX.length, timeSteps, timeSteppedTrainX[0][0].length])
+
+    const inputX = tf.tensor3d(timeSteppedTrainX, [timeSteppedTrainX.length, timeSteps, colsX])
+    const targetY = tf.tensor2d(trimedTrainY,  [trimedTrainY.length, colsY])
+
+
+    console.log('inputX', inputX)
+    console.log('inputX', targetY)
     
-```
-
-
-2. **Parsing a Production Dataset:**
-
-```javascript
-    import { parseProductionX } from './scale.js'
-    import {descaleArrayObj} from './descale.js'
-
-    const xCallbackFunc = ({ objRow, index }) => {
-        const curr = objRow[index];
-        const { open, high, low, sma_200, sma_100 } = curr;
-
-        return {
-            open,
-            high,
-            low,
-            sma_200,
-            sma_100
-        };
-    };
-
-    const myArray = [
-        { open: 135.23, high: 137.45, low: 134.56, sma_200: 125.34, sma_100: 130.56 },
-        { open: 136.45, high: 138.67, low: 135.67, sma_200: 126.78, sma_100: 131.45 },
-        { open: 137.89, high: 139.34, low: 136.34, sma_200: 127.56, sma_100: 132.78 }
-    ];
-
-    const {X, configX, keyNamesX} = parseProductionX({
-        arrObj: myArray,
-        weights: { open: 2, high: 1, low: 1, sma_200: 1, sma_100: 1 },
-        xCallbackFunc,
-        forceScaling: null
-    });
-
-    console.log('productionData.X', productionData.X)
-    console.log('descaled array be equal to myArray', descaleArrayObj({scaled: X, config: configX, keyNames: keyNamesX}))
-
-```
-
----
-
-### Upcoming Feature: Optional Precision Handling with Big.js and BigNumber.js
-
-In the next release, we are introducing an optional **precision** feature to enhance decimal precision in financial and scientific datasets. This feature will allow users to integrate **Big.js** or **BigNumber.js** libraries seamlessly into their data processing workflow by adding a new `precision` property to the parameters of `parseTrainingXY` and `parseProductionX`.
-
-#### How Precision Handling Will Work
-
-With the new `precision` property, users can pass either Big.js or BigNumber.js as callback functions to handle high-precision decimal calculations. This makes the integration fully optional, allowing flexibility based on the precision requirements of the dataset. When `precision` is set, the toolkit will use the specified library for all numeric computations, ensuring high precision and minimizing rounding errors.
-
-1. **Future Example Usage:**
-
-```javascript
-    import Big from 'big.js';
-    import BigNumber from 'bignumber.js';
-    import { parseTrainingXY, parseProductionX } from './scale.js';
-
-    const myArray = [
-        { open: 135.23, high: 137.45, low: 134.56, sma_200: 125.34, sma_100: 130.56 },
-        { open: 136.45, high: 138.67, low: 135.67, sma_200: 126.78, sma_100: 131.45 },
-        { open: 137.89, high: 139.34, low: 136.34, sma_200: 127.56, sma_100: 132.78 }
-    ];
-
-    const trainingData = parseTrainingXY({
-        arrObj: myArray,
-        trainingSplit: 0.75,
-        weights: { open: 1, high: 1, low: 1, sma_200: 1, sma_100: 1 },
-        yCallbackFunc,
-        xCallbackFunc,
-        precision: Big, // Big or BigNumber callbacks for high-precision calculations
-        forceScaling: 'normalization'
-    });
 ```
 
 ---

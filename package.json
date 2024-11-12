@@ -11,6 +11,7 @@
   "license": "ISC",
   "description": "This repository contains a JavaScript module designed to facilitate the preprocessing of datasets for machine learning applications. The primary functionality of the module is to scale feature data using normalization or standardization methods, and to parse training and production datasets into appropriate formats for training models.",
   "devDependencies": {
+    "@tensorflow/tfjs-node": "^4.22.0",
     "webpack": "^5.96.1",
     "webpack-cli": "^5.1.4"
   },

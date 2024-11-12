@@ -1,35 +1,41 @@
-import { parseTrainingXY, parseProductionX } from "../src/datasets.js";
-import { descaleArrayObj } from "../src/descale.js";
-import { loadFile } from "./fs.js";
+import { parseTrainingXY } from "../src/datasets.js"
+import {arrayToTimesteps} from '../src/timeSteps.js'
+import { loadFile } from "./fs.js"
+import * as tf from '@tensorflow/tfjs-node'
 
 const test = async () => {
 
-    const timeSteps = 1
-    const myArray = (await loadFile({fileName: '1d-spy.json', pathName: 'datasets'}))
+    const myArray = (await loadFile({fileName: '1d-spy.json', pathName: 'datasets'})) //file in /datasets/1d-spy.json
     
+    //callback function used to prepare X before scaling
     const xCallbackFunc = ({ objRow, index }) => {
-        const curr = objRow[index];
-        const { open, high, low} = curr;
-    
+        const curr = objRow[index]
+        const prev = objRow[index - 1]
+
         //returning null or undefined will exclude current row X and Y from training
+        if(typeof prev === 'undefined') return null
+
+        const { open, high, low, close } = curr
+
         return {
-            open,
-            high,
-            low,
-        };
-    };
-    
+            change: open - prev.close,
+            top: high - Math.max(open, close),
+            bottom: low - Math.min(open, close),
+            body: open-close,
+        }
+    }
+
+    //callback function used to prepare Y before scaling
     const yCallbackFunc = ({ objRow, index }) => {
         const curr = objRow[index];
         const next = objRow[index + 1];
-    
-         //returning null or undefined will exclude current row X and Y from training
+
+        //returning null or undefined will exclude current row X and Y from training
         if (typeof next === 'undefined') return null;
-    
+
         return {
-            label_1: next.open > curr.open,       // Label indicating if the next open price is higher than the current
-            label_2: next.high > curr.high,       // Label indicating if the next high price is higher than the current
-            label_3: next.low > curr.low,         // Label indicating if the next low price is higher than the current
+            label_1: next.open > curr.close,
+            label_2: next.close > curr.close,
         };
     };
     
@@ -42,22 +48,31 @@ const test = async () => {
         keyNamesX,
     } = parseTrainingXY({
         arrObj: myArray,
-        trainingSplit: 0.75,
-        weights: { open: 1, high: 1, low: 1, sma_200: 1, sma_100: 1 },
+        trainingSplit: 0.90,
         yCallbackFunc,
         xCallbackFunc,
-        forceScaling: null,
-        timeSteps
+        forceScaling: 'normalization',
     });
 
-    //console.log(JSON.stringify(trainingData))
 
     console.log('testX', testX.slice(-2))
-    const descaled = descaleArrayObj({scaled: testX, config: configX, keyNames: keyNamesX, timeSteps})
 
-    //comparing descaled values with the last values of input myArray
-    console.log(descaled.slice(-2)) //last 2 values of descaled
-    console.log(myArray.slice(-3, -1).map(({ open, high, low }) => ({ open, high, low }))) //last 2 values of myArray -1 interval
+
+    const timeSteps = 10
+    const colsX = trainX[0].length
+    const colsY = trainY[0].length
+    const timeSteppedTrainX = arrayToTimesteps(trainX, timeSteps)
+    const trimedTrainY = trainY.slice(timeSteps-1)
+
+
+    console.log([trainX.length, timeSteps, timeSteppedTrainX[0][0].length])
+
+    const inputX = tf.tensor3d(timeSteppedTrainX, [timeSteppedTrainX.length, timeSteps, colsX])
+    const targetY = tf.tensor2d(trimedTrainY,  [trimedTrainY.length, colsY])
+
+
+    console.log('inputX', inputX)
+    console.log('inputX', targetY)
 }
 
 test()
