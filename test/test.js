@@ -4,7 +4,7 @@ import { loadFile } from "./fs.js";
 
 const test = async () => {
 
-    const timeSteps = 10
+    const timeSteps = 1
     const myArray = (await loadFile({fileName: '1d-spy.json', pathName: 'datasets'}))
     
     const xCallbackFunc = ({ objRow, index }) => {

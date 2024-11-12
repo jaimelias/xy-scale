@@ -1,11 +1,9 @@
-import { timeStepsToArray } from './timeSteps.js';
-
-export const descaleArrayObj = ({ scaled, config, keyNames, timeSteps = 0 }) => {
+export const descaleArrayObj = ({ scaled, config, keyNames }) => {
 
     const { min, max, std, mean, approach, inputTypes, uniqueStringIndexes } = config;
 
     // Initialize the descaled output array
-    const descaledOutput = timeStepsToArray(scaled, timeSteps).map(scaledRow => {
+    const descaledOutput = scaled.map(scaledRow => {
         const originalObj = {};
         let idx = 0;
 

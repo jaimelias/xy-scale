@@ -28,7 +28,6 @@ This function prepares a dataset for supervised learning by parsing, scaling, an
 - `yCallbackFunc` (Function): Custom function to parse Y for each object. Return null or undefined to exclude it from training.
 - `xCallbackFunc` (Function): Custom function to parse X for each object. Return null or undefined to exclude it from training.
 - `forceScaling` (String, optional): Forces a specific scaling approach for each feature.
-- `timeSteps` (Number, optional): Transforms a one-dimensional array into an array of overlapping sequences (timesteps), each of a specified length. Default is 0 returning original output.
 
 #### Features:
 - **Y and X Parsing**: Custom parsing for Y and X based on user-defined functions.
@@ -57,7 +56,6 @@ Designed for production environments, this function parses and scales feature da
 - `weights` (Object, optional): Feature weights for scaling.
 - `xCallbackFunc` (Function): Custom function to parse X for each object. Return null or undefined to exclude it from production.
 - `forceScaling` (String, optional): Forces a specific scaling approach for each feature.
-- `timeSteps` (Number, optional): Transforms a one-dimensional array into an array of overlapping sequences (timesteps), each of a specified length. Default is 0 returning original output.
 
 #### Returns:
 - `X`: Scaled feature array for production data.
@@ -86,11 +84,27 @@ The `descaleArrayObj` function reverses the scaling applied to a dataset, recons
 - `scaled`: scaled array returned from `parseTrainingXY` (`trainX`, `trainY`, `testX` or `testY`) or `parseProductionX` (`X`).
 - `config`: config object returned from `parseTrainingXY` (`configX`, `configY`) or `parseProductionX` (`configX`).
 - `keyNames`: keyNames array returned from `parseTrainingXY` (`keyNamesX`, `keyNamesY`) or `parseProductionX` (`keyNamesX`).
-- `timeSteps`: input numeric timeSteps param submited to `parseTrainingXY` or `parseProductionX`. Defaults to 0. 
 
 #### Returns:
 
 The output of this function in an array of objects similar or equal to the input array of objects submited to `parseTrainingXY` or `parseProductionX`.
+
+### 4. `arrayToTimesteps`
+
+The `arrayToTimesteps` function transforms a flat array into an array of overlapping sequences of a specified length. This is a common preprocessing step for time-series or sequential data models.
+
+#### Parameters:
+- `arr` (Array): The input array to be converted into timesteps.
+- `timeSteps` (Number): The number of elements in each timestep sequence.
+  - Must be greater than `0`.
+  - If `timeSteps === 0`, the function returns the original array unchanged.
+
+#### Returns:
+An array of sub-arrays, where each sub-array contains `timeSteps` consecutive elements from the original array.
+
+#### Throws:
+- An error if `timeSteps < 0`, with the message: `"timeSteps must be greater than 0"`.
+
 
 ---
 
@@ -149,8 +163,7 @@ The output of this function in an array of objects similar or equal to the input
         weights: { open: 1, high: 1, low: 1, sma_200: 1, sma_100: 1 },
         yCallbackFunc,
         xCallbackFunc,
-        forceScaling: 'normalization',
-        timeSteps: 0
+        forceScaling: 'normalization'
     });
 
     
@@ -186,8 +199,7 @@ The output of this function in an array of objects similar or equal to the input
         arrObj: myArray,
         weights: { open: 2, high: 1, low: 1, sma_200: 1, sma_100: 1 },
         xCallbackFunc,
-        forceScaling: null,
-        timeSteps: 0
+        forceScaling: null
     });
 
     console.log('productionData.X', productionData.X)
@@ -225,8 +237,7 @@ With the new `precision` property, users can pass either Big.js or BigNumber.js 
         yCallbackFunc,
         xCallbackFunc,
         precision: Big, // Big or BigNumber callbacks for high-precision calculations
-        forceScaling: 'normalization',
-        timeSteps: 0
+        forceScaling: 'normalization'
     });
 ```
 

@@ -1,6 +1,4 @@
 import { scaleArrayObj } from "./scale.js";
-import { arrayToTimesteps } from "./timeSteps.js";
-
 
 export const parseTrainingXY = ({ arrObj, trainingSplit = 0.8, weights = {}, yCallbackFunc, xCallbackFunc, forceScaling, timeSteps = 0 }) => {
     const X = [];
@@ -35,10 +33,10 @@ export const parseTrainingXY = ({ arrObj, trainingSplit = 0.8, weights = {}, yCa
 
     // Split into training and testing sets
     return {
-        trainX: arrayToTimesteps(scaledX.slice(0, splitIndex), timeSteps),
-        trainY: arrayToTimesteps(scaledY.slice(0, splitIndex), timeSteps),
-        testX: arrayToTimesteps(scaledX.slice(splitIndex), timeSteps),
-        testY: arrayToTimesteps(scaledY.slice(splitIndex), timeSteps),
+        trainX: scaledX.slice(0, splitIndex),
+        trainY: scaledY.slice(0, splitIndex),
+        testX: scaledX.slice(splitIndex),
+        testY: scaledY.slice(splitIndex),
 
         configX,
         keyNamesX,
@@ -71,7 +69,7 @@ export const parseProductionX = ({ arrObj, weights = {}, xCallbackFunc, forceSca
 
     // Split into training and testing sets
     return {
-        X: arrayToTimesteps(scaledX, timeSteps),
+        X: scaledX,
         configX,
         keyNamesX
     }
