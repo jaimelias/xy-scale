@@ -1,9 +1,4 @@
-export const scaleArrayObj = ({arrObj, weights = {}, forceScaling = null}) => {
-
-    if (forceScaling !== null && forceScaling !== 'normalization' && forceScaling !== 'standardization') {
-        throw Error('forceScaling should be null, "normalization" or "standardization"');
-    }
-
+export const scaleArrayObj = ({ arrObj, weights = {}, minmaxRange = [0, 1] }) => {
     const n = arrObj.length;
 
     if (n === 0) {
@@ -12,6 +7,12 @@ export const scaleArrayObj = ({arrObj, weights = {}, forceScaling = null}) => {
             scaledConfig: {},
             keyNames: []
         };
+    }
+
+    const [rangeMin, rangeMax] = minmaxRange;
+    
+    if (rangeMin >= rangeMax) {
+        throw new Error('Invalid minmaxRange: rangeMin must be less than rangeMax');
     }
 
     const keyNames = Object.keys(arrObj[0]);
@@ -33,11 +34,7 @@ export const scaleArrayObj = ({arrObj, weights = {}, forceScaling = null}) => {
     const inputTypes = {};
     const min = {};
     const max = {};
-    const mean = {};
-    const M2 = {};
-    const approach = {};
     const uniqueStringIndexes = {};
-    const counts = {};
 
     for (const key of keyNames) {
         const firstValue = arrObj[0][key];
@@ -49,9 +46,6 @@ export const scaleArrayObj = ({arrObj, weights = {}, forceScaling = null}) => {
 
         min[key] = Infinity;
         max[key] = -Infinity;
-        mean[key] = 0;
-        M2[key] = 0;
-        counts[key] = 0;
     }
 
     for (const obj of arrObj) {
@@ -65,28 +59,13 @@ export const scaleArrayObj = ({arrObj, weights = {}, forceScaling = null}) => {
                 }
                 value = uniqueIndexes[value];
                 obj[key] = value;
+            } else if (inputTypes[key] === 'boolean') 
+            {
+                obj[key] = Number(value)
             }
 
             min[key] = Math.min(min[key], value);
             max[key] = Math.max(max[key], value);
-
-            counts[key]++;
-            const delta = value - mean[key];
-            mean[key] += delta / counts[key];
-            M2[key] += delta * (value - mean[key]);
-        }
-    }
-
-    const std = {};
-    for (const key of keyNames) {
-        std[key] = counts[key] > 1 ? Math.sqrt(M2[key] / (counts[key] - 1)) : 0;
-
-        if (forceScaling === 'normalization' || forceScaling === 'standardization') {
-            approach[key] = forceScaling;
-        } else if (min[key] === 0 && max[key] === 1) {
-            approach[key] = 'none';  // No scaling required
-        } else {
-            approach[key] = std[key] < 1 ? 'normalization' : 'standardization';
         }
     }
 
@@ -100,17 +79,10 @@ export const scaleArrayObj = ({arrObj, weights = {}, forceScaling = null}) => {
             const value = obj[key];
             const minValue = min[key];
             const maxValue = max[key];
-            const meanValue = mean[key];
-            const stdValue = std[key];
 
-            let scaledValue;
-            if (approach[key] === 'none') {
-                scaledValue = value;  // No scaling
-            } else if (approach[key] === 'normalization') {
-                scaledValue = maxValue !== minValue ? (value - minValue) / (maxValue - minValue) : 0;
-            } else {
-                scaledValue = stdValue !== 0 ? (value - meanValue) / stdValue : 0;
-            }
+            const scaledValue = maxValue !== minValue
+                ? rangeMin + ((value - minValue) / (maxValue - minValue)) * (rangeMax - rangeMin)
+                : rangeMin;
 
             const weight = keyNameWeights[j];
             for (let w = 0; w < weight; w++) {
@@ -120,7 +92,7 @@ export const scaleArrayObj = ({arrObj, weights = {}, forceScaling = null}) => {
         scaledOutput[i] = scaledRow;
     }
 
-    const scaledConfig = { min, max, std, mean, approach, inputTypes, uniqueStringIndexes };
+    const scaledConfig = { min, max, inputTypes, uniqueStringIndexes, rangeMin, rangeMax };
 
     return {
         scaledOutput,
