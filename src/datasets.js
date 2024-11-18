@@ -1,6 +1,6 @@
 import { scaleArrayObj } from "./scale.js";
 
-export const parseTrainingXY = ({ arrObj, trainingSplit = 0.8, weights = {}, yCallbackFunc, xCallbackFunc, forceScaling, timeSteps = 0 }) => {
+export const parseTrainingXY = ({ arrObj, trainingSplit = 0.8, weights = {}, yCallbackFunc, xCallbackFunc, forceScaling, groups }) => {
     const X = [];
     const Y = [];
 
@@ -21,13 +21,13 @@ export const parseTrainingXY = ({ arrObj, trainingSplit = 0.8, weights = {}, yCa
         scaledConfig: configX, 
         scaledKeyNames: keyNamesX
 
-    } = scaleArrayObj({arrObj: X, weights, forceScaling})
+    } = scaleArrayObj({arrObj: X, weights, forceScaling, groups})
 
     const {
         scaledOutput: scaledY,
         scaledConfig: configY,
         scaledKeyNames: keyNamesY
-    } = scaleArrayObj({arrObj: Y, weights, forceScaling})
+    } = scaleArrayObj({arrObj: Y, weights, forceScaling, groups})
 
     const splitIndex = Math.floor(scaledX.length * trainingSplit)
 
@@ -46,7 +46,7 @@ export const parseTrainingXY = ({ arrObj, trainingSplit = 0.8, weights = {}, yCa
 };
 
 
-export const parseProductionX = ({ arrObj, weights = {}, xCallbackFunc, forceScaling, timeSteps = 0 }) => {
+export const parseProductionX = ({ arrObj, weights = {}, xCallbackFunc, forceScaling, groups}) => {
     const X = [];
 
     for (let x = 0; x < arrObj.length; x++) {
@@ -64,7 +64,7 @@ export const parseProductionX = ({ arrObj, weights = {}, xCallbackFunc, forceSca
         scaledConfig: configX, 
         scaledKeyNames: keyNamesX
 
-    } = scaleArrayObj({arrObj: X, weights, forceScaling})
+    } = scaleArrayObj({arrObj: X, weights, forceScaling, groups})
 
 
     // Split into training and testing sets
