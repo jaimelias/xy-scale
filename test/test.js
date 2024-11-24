@@ -55,10 +55,10 @@ const test = async () => {
         trainingSplit: 0.90,
         yCallbackFunc,
         xCallbackFunc,
-        forceScaling: null,
         groups: {
             ohlc: ['open', 'high', 'low', 'close']
-        }
+        },
+        shuffle: true
     });
 
 
@@ -77,9 +77,9 @@ const test = async () => {
     const inputX = tf.tensor3d(timeSteppedTrainX, [timeSteppedTrainX.length, timeSteps, colsX])
     const targetY = tf.tensor2d(trimedTrainY,  [trimedTrainY.length, colsY])
 
-    //console.log('configX', keyNamesX)
-    //console.log('inputX', inputX)
-    //console.log('inputX', targetY)
+    console.log('configX', keyNamesX)
+    console.log('inputX', inputX)
+    console.log('inputX', targetY)
 }
 
 test()

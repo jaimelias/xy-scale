@@ -1,8 +1,17 @@
 import { scaleArrayObj } from "./scale.js";
+import { arrayShuffle, xyArrayShuffle } from "./utilities.js";
 
-export const parseTrainingXY = ({ arrObj, trainingSplit = 0.8, weights = {}, yCallbackFunc, xCallbackFunc, forceScaling, groups }) => {
-    const X = [];
-    const Y = [];
+export const parseTrainingXY = ({ 
+    arrObj, 
+    trainingSplit = 0.8, 
+    weights = {}, 
+    yCallbackFunc, 
+    xCallbackFunc, 
+    groups,
+    shuffle = false
+}) => {
+    let X = [];
+    let Y = [];
 
     //if parsedX and parsedY is undefined or null the current row will be excluded from training or production
     for (let x = 0; x < arrObj.length; x++) {
@@ -15,19 +24,25 @@ export const parseTrainingXY = ({ arrObj, trainingSplit = 0.8, weights = {}, yCa
         }
     }
 
-    // Scale X and Y, if applicable
+    if(shuffle)
+    {
+        const {shuffledX, shuffledY} = xyArrayShuffle(X, Y)
+        X = shuffledX
+        Y = shuffledY
+    }
+
     const {
         scaledOutput: scaledX, 
         scaledConfig: configX, 
         scaledKeyNames: keyNamesX
 
-    } = scaleArrayObj({arrObj: X, weights, forceScaling, groups})
+    } = scaleArrayObj({arrObj: X, weights, groups})
 
     const {
         scaledOutput: scaledY,
         scaledConfig: configY,
         scaledKeyNames: keyNamesY
-    } = scaleArrayObj({arrObj: Y, weights, forceScaling, groups})
+    } = scaleArrayObj({arrObj: Y, weights, groups})
 
     const splitIndex = Math.floor(scaledX.length * trainingSplit)
 
@@ -46,8 +61,14 @@ export const parseTrainingXY = ({ arrObj, trainingSplit = 0.8, weights = {}, yCa
 };
 
 
-export const parseProductionX = ({ arrObj, weights = {}, xCallbackFunc, forceScaling, groups}) => {
-    const X = [];
+export const parseProductionX = ({ 
+    arrObj, 
+    weights = {}, 
+    xCallbackFunc, 
+    groups,
+    shuffle = false
+}) => {
+    let X = [];
 
     for (let x = 0; x < arrObj.length; x++) {
         const parsedX = xCallbackFunc({ objRow: arrObj, index: x })
@@ -57,14 +78,18 @@ export const parseProductionX = ({ arrObj, weights = {}, xCallbackFunc, forceSca
         }
     }
 
-    // Scale X and Y, if applicable
-    // Scale X and Y, if applicable
+    if(shuffle)
+    {
+        X = arrayShuffle(X)
+    }
+
+    // Scale X
     const {
         scaledOutput: scaledX, 
         scaledConfig: configX, 
         scaledKeyNames: keyNamesX
 
-    } = scaleArrayObj({arrObj: X, weights, forceScaling, groups})
+    } = scaleArrayObj({arrObj: X, weights, groups})
 
 
     // Split into training and testing sets
