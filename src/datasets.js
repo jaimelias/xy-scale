@@ -4,7 +4,7 @@ import { arrayShuffle, xyArrayShuffle } from "./utilities.js";
 export const parseTrainingXY = ({ 
     arrObj, 
     trainingSplit = 0.8, 
-    weights = {}, 
+    repeat = {}, 
     yCallbackFunc, 
     xCallbackFunc, 
     groups,
@@ -36,13 +36,13 @@ export const parseTrainingXY = ({
         scaledConfig: configX, 
         scaledKeyNames: keyNamesX
 
-    } = scaleArrayObj({arrObj: X, weights, groups})
+    } = scaleArrayObj({arrObj: X, repeat, groups})
 
     const {
         scaledOutput: scaledY,
         scaledConfig: configY,
         scaledKeyNames: keyNamesY
-    } = scaleArrayObj({arrObj: Y, weights, groups})
+    } = scaleArrayObj({arrObj: Y, repeat, groups})
 
     const splitIndex = Math.floor(scaledX.length * trainingSplit)
 
@@ -63,7 +63,7 @@ export const parseTrainingXY = ({
 
 export const parseProductionX = ({ 
     arrObj, 
-    weights = {}, 
+    repeat = {}, 
     xCallbackFunc, 
     groups,
     shuffle = false
@@ -89,7 +89,7 @@ export const parseProductionX = ({
         scaledConfig: configX, 
         scaledKeyNames: keyNamesX
 
-    } = scaleArrayObj({arrObj: X, weights, groups})
+    } = scaleArrayObj({arrObj: X, repeat, groups})
 
 
     // Split into training and testing sets

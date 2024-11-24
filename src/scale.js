@@ -1,4 +1,4 @@
-export const scaleArrayObj = ({ arrObj, weights = {}, minmaxRange = [0, 1], groups = {} }) => {
+export const scaleArrayObj = ({ arrObj, repeat = {}, minmaxRange = [0, 1], groups = {} }) => {
     const n = arrObj.length;
 
     validateUniqueProperties(groups);
@@ -19,16 +19,16 @@ export const scaleArrayObj = ({ arrObj, weights = {}, minmaxRange = [0, 1], grou
 
     const keyNames = Object.keys(arrObj[0]);
 
-    const keyNameWeights = keyNames.map(key => {
-        return weights.hasOwnProperty(key) ? Math.max(weights[key], 1) : 1;
+    const repeatedKeyNames = keyNames.map(key => {
+        return repeat.hasOwnProperty(key) ? Math.max(repeat[key], 1) : 1;
     });
 
-    const totalColumns = keyNameWeights.reduce((sum, weight) => sum + weight, 0);
+    const totalColumns = repeatedKeyNames.reduce((sum, rep) => sum + rep, 0);
 
     const outputKeyNames = new Array(totalColumns);
     let idx = 0;
     for (let i = 0; i < keyNames.length; i++) {
-        for (let w = 0; w < keyNameWeights[i]; w++) {
+        for (let w = 0; w < repeatedKeyNames[i]; w++) {
             outputKeyNames[idx++] = keyNames[i];
         }
     }
@@ -114,10 +114,12 @@ export const scaleArrayObj = ({ arrObj, weights = {}, minmaxRange = [0, 1], grou
                     ? rangeMin + ((value - minValue) / (maxValue - minValue)) * (rangeMax - rangeMin)
                     : rangeMin;
 
-            const weight = keyNameWeights[j];
-            for (let w = 0; w < weight; w++) {
+            const rep = repeatedKeyNames[j];
+
+            for (let w = 0; w < rep; w++) {
                 scaledRow[idx++] = scaledValue;
             }
+            
         }
         scaledOutput[i] = scaledRow;
     }

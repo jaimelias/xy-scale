@@ -24,7 +24,7 @@ This function prepares a dataset for supervised learning by parsing, scaling, an
 #### Parameters:
 - `arrObj` (Array of Objects): Input data array containing all X and Y.
 - `trainingSplit` (Number, optional): Defines the training dataset size (default `0.8`).
-- `weights` (Object, optional): Feature weights for scaling.
+- `repeat` (Object, optional): Feature repeat for scaling.
 - `yCallbackFunc` (Function): Custom function to parse Y for each object. Return null or undefined to exclude it from training.
 - `xCallbackFunc` (Function): Custom function to parse X for each object. Return null or undefined to exclude it from training.
 - `forceScaling` (String, optional): Forces a specific scaling approach for each feature.
@@ -45,7 +45,7 @@ This function prepares a dataset for supervised learning by parsing, scaling, an
 #### Returns:
 - `trainX`, `trainY`, `testX`, `testY`: Scaled feature and label arrays for training and testing sets.
 - `configX`, `configY`: Scaling configuration for X and Y.
-- `keyNamesX`, `trainLabelKeyNames`: Key names reflecting feature weights.
+- `keyNamesX`, `trainLabelKeyNames`: Key names reflecting feature repeat.
 
 ### 2. `parseProductionX`
 
@@ -53,14 +53,14 @@ Designed for production environments, this function parses and scales feature da
 
 #### Parameters:
 - `arrObj` (Array of Objects): Input data array for production.
-- `weights` (Object, optional): Feature weights for scaling.
+- `repeat` (Object, optional): Feature repeat for scaling.
 - `xCallbackFunc` (Function): Custom function to parse X for each object. Return null or undefined to exclude it from production.
 - `forceScaling` (String, optional): Forces a specific scaling approach for each feature.
 
 #### Returns:
 - `X`: Scaled feature array for production data.
 - `configX`: Scaling configuration for production data.
-- `keyNamesX`: Key names reflecting feature weights.
+- `keyNamesX`: Key names reflecting feature repeat.
 
 ---
 
@@ -193,6 +193,6 @@ An array of sub-arrays, where each sub-array contains `timeSteps` consecutive el
 
 ## Technical Details
 
-- **Error Handling**: Validates scaling approach values and ensures positive feature weights.
+- **Error Handling**: Validates scaling approach values and ensures positive feature repeat.
 - **Single-Pass Calculations**: Efficient single-pass statistics calculation for mean and variance.
 - **Customizable**: Supports custom parsing functions, configurable feature weighting, and forced scaling.

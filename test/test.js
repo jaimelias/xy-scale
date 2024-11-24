@@ -58,7 +58,10 @@ const test = async () => {
         groups: {
             ohlc: ['open', 'high', 'low', 'close']
         },
-        shuffle: true
+        shuffle: true,
+        repeat: {
+            close: 20
+        }
     });
 
 
