@@ -61,7 +61,8 @@ const test = async () => {
         shuffle: true,
         repeat: {
             close: 20
-        }
+        },
+        minmaxRange: [-1, 1]
     });
 
 
@@ -80,6 +81,7 @@ const test = async () => {
     const inputX = tf.tensor3d(timeSteppedTrainX, [timeSteppedTrainX.length, timeSteps, colsX])
     const targetY = tf.tensor2d(trimedTrainY,  [trimedTrainY.length, colsY])
 
+    console.log('trainX', trainX[trainX.length - 1])
     console.log('configX', keyNamesX)
     console.log('inputX', inputX)
     console.log('inputX', targetY)

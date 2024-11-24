@@ -8,7 +8,8 @@ export const parseTrainingXY = ({
     yCallbackFunc, 
     xCallbackFunc, 
     groups,
-    shuffle = false
+    shuffle = false,
+    minmaxRange
 }) => {
     let X = [];
     let Y = [];
@@ -36,13 +37,13 @@ export const parseTrainingXY = ({
         scaledConfig: configX, 
         scaledKeyNames: keyNamesX
 
-    } = scaleArrayObj({arrObj: X, repeat, groups})
+    } = scaleArrayObj({arrObj: X, repeat, groups, minmaxRange})
 
     const {
         scaledOutput: scaledY,
         scaledConfig: configY,
         scaledKeyNames: keyNamesY
-    } = scaleArrayObj({arrObj: Y, repeat, groups})
+    } = scaleArrayObj({arrObj: Y, repeat, groups, minmaxRange})
 
     const splitIndex = Math.floor(scaledX.length * trainingSplit)
 
@@ -66,7 +67,8 @@ export const parseProductionX = ({
     repeat = {}, 
     xCallbackFunc, 
     groups,
-    shuffle = false
+    shuffle = false,
+    minmaxRange
 }) => {
     let X = [];
 
@@ -89,7 +91,7 @@ export const parseProductionX = ({
         scaledConfig: configX, 
         scaledKeyNames: keyNamesX
 
-    } = scaleArrayObj({arrObj: X, repeat, groups})
+    } = scaleArrayObj({arrObj: X, repeat, groups, minmaxRange})
 
 
     // Split into training and testing sets
