@@ -38,13 +38,13 @@ Processes a dataset for supervised learning by scaling and splitting it into tra
 
 **Parameters:**
 
-- `arrObj` (Array of Objects): Input data containing features (X) and labels (Y).
+- `arrObj` (Array of Objects): Input data containing features (X) and labels (Y) e.g, `[{high: 10, low: 8, close: 9, dayOfTheWeek: 'monday'}, {high: 11, low: 8, close: 10, dayOfTheWeek: 'tuesday'}]`. Each Item an be a `number`, `string` or `boolean`.
 - `trainingSplit` (Number, optional): Fraction of data for training (default: `0.8`).
-- `repeat` (Object, optional): Determines feature repetition for scaling.
 - `yCallbackFunc` (Function): Extracts Y values from each row. Returns `null` or `undefined` to exclude a row.
 - `xCallbackFunc` (Function): Extracts X values from each row. Returns `null` or `undefined` to exclude a row.
-- `groups` (Object, optional): Groups continuous values features into categories (e.g., `{ ohlc: ['open', 'high', 'low', 'close'] }`).
+- `groups` (Object, optional): Groups continuous values features into categories after `yCallbackFunc` and `xCallbackFunc` callbacks are applied (e.g., `{ ohlc: ['open', 'high', 'low', 'close'] }`). Each feature belonging to a group will be MinMax scaled or standardized using the group's properties (`min`, `max`, `std`).
 - `shuffle` (Boolean, optional): Randomizes data order after `yCallbackFunc` and `xCallbackFunc` callbacks are applied (default: `false`).
+- `repeat` (Object, optional): Determines feature repetition after `yCallbackFunc` and `xCallbackFunc` callbacks are applied.
 
 **Returns:**
 
@@ -61,11 +61,11 @@ Parses and scales unseen production data for feature preparation.
 
 **Parameters:**
 
-- `arrObj` (Array of Objects): Input data array for feature processing.
-- `repeat` (Object, optional): Determines feature repetition for scaling.
+- `arrObj` (Array of Objects): Input data containing features (X) and labels (Y) e.g, `[{high: 10, low: 8, close: 9, dayOfTheWeek: 'monday'}, {high: 11, low: 8, close: 10, dayOfTheWeek: 'tuesday'}]`. Each Item an be a `number`, `string` or `boolean`.
+- `repeat` (Object, optional): Determines feature repetition after `yCallbackFunc` and `xCallbackFunc` callbacks are applied.
 - `xCallbackFunc` (Function): Extracts X values from each row. Returns `null` or `undefined` to exclude a row.
-- `groups` (Object, optional): Groups features into categories.
-- `shuffle` (Boolean, optional): Randomizes data order (default: `false`).
+- `groups` (Object, optional): Groups continuous values features into categories after `yCallbackFunc` and `xCallbackFunc` callbacks are applied (e.g., `{ ohlc: ['open', 'high', 'low', 'close'] }`). Each feature belonging to a group will be MinMax scaled or standardized using the group's properties (`min`, `max`, `std`).
+- `shuffle` (Boolean, optional): Randomizes data order after `yCallbackFunc` and `xCallbackFunc` callbacks are applied (default: `false`).
 
 **Returns:**
 
