@@ -1,5 +1,6 @@
 import { scaleArrayObj } from "./scale.js";
 import { arrayShuffle, xyArrayShuffle } from "./utilities.js";
+import { oversampleXY, undersampleXY } from "./balancing.js";
 
 export const parseTrainingXY = ({ 
     arrObj, 
@@ -9,7 +10,8 @@ export const parseTrainingXY = ({
     xCallbackFunc, 
     groups,
     shuffle = false,
-    minmaxRange
+    minmaxRange,
+    balancing = ''
 }) => {
     let X = [];
     let Y = [];
@@ -32,18 +34,42 @@ export const parseTrainingXY = ({
         Y = shuffledY
     }
 
-    const {
+    let {
         scaledOutput: scaledX, 
         scaledConfig: configX, 
         scaledKeyNames: keyNamesX
 
     } = scaleArrayObj({arrObj: X, repeat, groups, minmaxRange})
 
-    const {
+    let {
         scaledOutput: scaledY,
         scaledConfig: configY,
         scaledKeyNames: keyNamesY
     } = scaleArrayObj({arrObj: Y, repeat, groups, minmaxRange})
+
+
+    if(balancing)
+    {
+        let balance
+
+        if(balancing === 'oversample')
+        {
+            balance = oversampleXY(scaledX, scaledY)
+            scaledX = balance.X
+            scaledY = balance.Y
+        }
+        else if(balancing === 'undersample')
+        {
+            balance = undersampleXY(scaledX, scaledY)
+            scaledX = balance.X
+            scaledY = balance.Y           
+        }
+        else
+        {
+            throw Error('balancing argument only accepts "false", "oversample" and "undersample". Defaults to "false".')
+        }
+    }
+
 
     const splitIndex = Math.floor(scaledX.length * trainingSplit)
 

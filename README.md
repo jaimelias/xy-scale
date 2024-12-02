@@ -45,6 +45,7 @@ Processes a dataset for supervised learning by scaling and splitting it into tra
 - `groups` (Object, optional): Groups continuous values features into categories after `yCallbackFunc` and `xCallbackFunc` callbacks are applied (e.g., `{ ohlc: ['open', 'high', 'low', 'close'] }`). Each feature belonging to a group will be MinMax scaled or standardized using the group's properties (`min`, `max`, `std`).
 - `shuffle` (Boolean, optional): Randomizes data order after `yCallbackFunc` and `xCallbackFunc` callbacks are applied (default: `false`).
 - `repeat` (Object, optional): Determines feature repetition after `yCallbackFunc` and `xCallbackFunc` callbacks are applied.
+- `balancing` (String, optional): Handles inbalanced datasets applying `oversample` or `undersample` to `X` and `Y` (defaults to `null`);
 
 **Returns:**
 
@@ -165,6 +166,7 @@ import * as tf from '@tensorflow/tfjs-node';
         groups: { ohlc: ['open', 'high', 'low', 'close'] },
         shuffle: true,
         repeat: { close: 20 },
+        balancing: null, //oversample or undersample
     });
 
     // Time-stepping and TensorFlow integration
