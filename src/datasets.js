@@ -48,37 +48,46 @@ export const parseTrainingXY = ({
     } = scaleArrayObj({arrObj: Y, repeat, groups, minmaxRange})
 
 
-    if(balancing)
-    {
-        let balance
 
-        if(balancing === 'oversample')
-        {
-            balance = oversampleXY(scaledX, scaledY)
-            scaledX = balance.X
-            scaledY = balance.Y
-        }
-        else if(balancing === 'undersample')
-        {
-            balance = undersampleXY(scaledX, scaledY)
-            scaledX = balance.X
-            scaledY = balance.Y           
-        }
-        else
-        {
-            throw Error('balancing argument only accepts "false", "oversample" and "undersample". Defaults to "false".')
-        }
-    }
 
 
     const splitIndex = Math.floor(scaledX.length * trainingSplit)
 
+    let trainX = scaledX.slice(0, splitIndex)
+    let trainY = scaledY.slice(0, splitIndex)
+    let testX = scaledX.slice(splitIndex)
+    let testY = scaledY.slice(splitIndex)
+
+
+    if(balancing)
+        {
+            let balance
+    
+            if(balancing === 'oversample')
+            {
+                balance = oversampleXY(trainX, trainY)
+                trainX = balance.X
+                trainY = balance.Y
+            }
+            else if(balancing === 'undersample')
+            {
+                balance = undersampleXY(trainX, trainY)
+                trainX = balance.X
+                trainY = balance.Y           
+            }
+            else
+            {
+                throw Error('balancing argument only accepts "false", "oversample" and "undersample". Defaults to "false".')
+            }
+        }
+
+
     // Split into training and testing sets
     return {
-        trainX: scaledX.slice(0, splitIndex),
-        trainY: scaledY.slice(0, splitIndex),
-        testX: scaledX.slice(splitIndex),
-        testY: scaledY.slice(splitIndex),
+        trainX,
+        trainY,
+        testX,
+        testY,
 
         configX,
         keyNamesX,
