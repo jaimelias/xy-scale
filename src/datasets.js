@@ -7,7 +7,8 @@ export const parseTrainingXY = ({
     trainingSplit = 0.8, 
     repeat = {}, 
     yCallbackFunc, 
-    xCallbackFunc, 
+    xCallbackFunc,
+    validateRows = row => row,
     groups,
     shuffle = false,
     minmaxRange,
@@ -18,6 +19,9 @@ export const parseTrainingXY = ({
 
     //if parsedX and parsedY is undefined or null the current row will be excluded from training or production
     for (let x = 0; x < arrObj.length; x++) {
+
+        if(!validateRows(arrObj[x])) continue
+
         const parsedX = xCallbackFunc({ objRow: arrObj, index: x });
         const parsedY = yCallbackFunc({ objRow: arrObj, index: x });
     
@@ -100,7 +104,8 @@ export const parseTrainingXY = ({
 export const parseProductionX = ({ 
     arrObj, 
     repeat = {}, 
-    xCallbackFunc, 
+    xCallbackFunc,
+    validateRows = row => row,
     groups,
     shuffle = false,
     minmaxRange
@@ -108,7 +113,10 @@ export const parseProductionX = ({
     let X = [];
 
     for (let x = 0; x < arrObj.length; x++) {
-        const parsedX = xCallbackFunc({ objRow: arrObj, index: x })
+
+        if(!validateRows(arrObj[x])) continue
+
+        const parsedX = xCallbackFunc({ objRow: arrObj, index: x})
 
         if (parsedX) {
             X.push(parsedX)
