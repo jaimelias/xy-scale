@@ -12,7 +12,8 @@ export const parseTrainingXY = ({
     groups,
     shuffle = false,
     minmaxRange,
-    balancing = ''
+    balancing = '',
+    state = {}
 }) => {
     let X = [];
     let Y = [];
@@ -22,12 +23,12 @@ export const parseTrainingXY = ({
 
         if(!validateRows(arrObj[x])) continue
 
-        const parsedX = xCallbackFunc({ objRow: arrObj, index: x });
-        const parsedY = yCallbackFunc({ objRow: arrObj, index: x });
+        const parsedX = xCallbackFunc({ objRow: arrObj, index: x, state})
+        const parsedY = yCallbackFunc({ objRow: arrObj, index: x, state})
     
         if (parsedX !== undefined && parsedX !== null && parsedY !== undefined && parsedY !== null) {
-            X.push(parsedX);
-            Y.push(parsedY);
+            X.push(parsedX)
+            Y.push(parsedY)
         }
     }
 
@@ -108,7 +109,8 @@ export const parseProductionX = ({
     validateRows = row => row,
     groups,
     shuffle = false,
-    minmaxRange
+    minmaxRange,
+    state = {}
 }) => {
     let X = [];
 
@@ -116,7 +118,7 @@ export const parseProductionX = ({
 
         if(!validateRows(arrObj[x])) continue
 
-        const parsedX = xCallbackFunc({ objRow: arrObj, index: x})
+        const parsedX = xCallbackFunc({ objRow: arrObj, index: x, state})
 
         if (parsedX) {
             X.push(parsedX)
