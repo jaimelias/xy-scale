@@ -1,10 +1,10 @@
 export const scaleArrayObj = ({ arrObj, repeat = {}, minmaxRange = [0, 1], groups = {}, prevConfig = null }) => {
     
     const arrObjClone = [...arrObj]
-    const n = arrObjClone.length;
+    const arrObjLen = arrObjClone.length;
     const firstRow = arrObjClone[0]
 
-    if (n === 0) {
+    if (arrObjLen === 0) {
         return {
             scaledOutput: [],
             scaledConfig: {}
@@ -31,6 +31,7 @@ export const scaleArrayObj = ({ arrObj, repeat = {}, minmaxRange = [0, 1], group
         const countRepeatedKeyNames = repeatedKeyNames.reduce((sum, rep) => sum + rep, 0);
 
         config = {
+            arrObjLen,
             rangeMin: minmaxRange[0], 
             rangeMax: minmaxRange[1],
             inputTypes: {},
@@ -43,7 +44,7 @@ export const scaleArrayObj = ({ arrObj, repeat = {}, minmaxRange = [0, 1], group
             inputKeyNames,
             outputKeyNames: new Array(countRepeatedKeyNames),
             repeatedKeyNames,
-        } 
+        }
             
         let keyNamesIdx = 0;
 
@@ -123,8 +124,8 @@ export const scaleArrayObj = ({ arrObj, repeat = {}, minmaxRange = [0, 1], group
         }
     }
 
-    const scaledOutput = new Array(n);
-    for (let i = 0; i < n; i++) {
+    const scaledOutput = new Array(arrObjLen);
+    for (let i = 0; i < arrObjLen; i++) {
         const obj = arrObjClone[i];
         const scaledRow = new Array(config.outputKeyNames.length);
         let idx = 0;
