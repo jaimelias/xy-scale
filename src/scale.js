@@ -1,120 +1,156 @@
-export const scaleArrayObj = ({ arrObj, repeat = {}, minmaxRange = [0, 1], groups = {} }) => {
-    const n = arrObj.length;
-
-    validateUniqueProperties(groups);
+export const scaleArrayObj = ({ arrObj, repeat = {}, minmaxRange = [0, 1], groups = {}, prevConfig = null }) => {
+    
+    const arrObjClone = [...arrObj]
+    const n = arrObjClone.length;
+    const firstRow = arrObjClone[0]
 
     if (n === 0) {
         return {
             scaledOutput: [],
-            scaledConfig: {},
-            keyNames: []
+            scaledConfig: {}
         };
     }
 
-    const [rangeMin, rangeMax] = minmaxRange;
+    let config = {}
 
-    if (rangeMin >= rangeMax) {
-        throw new Error('Invalid minmaxRange: rangeMin must be less than rangeMax');
+    const isValidPrevConfig = prevConfig && validateConfig(prevConfig)
+
+    if(isValidPrevConfig)
+    {
+
+        validateCurrPrevConfig(prevConfig, {minmaxRange, repeat, groups, firstRow})
+        config = {...prevConfig}
     }
+    else
+    {
+        const inputKeyNames = Object.keys(firstRow);
 
-    const keyNames = Object.keys(arrObj[0]);
+        const repeatedKeyNames = inputKeyNames.map(key => {
+            return repeat.hasOwnProperty(key) ? Math.max(repeat[key], 1) : 1;
+        });
+    
+        const countRepeatedKeyNames = repeatedKeyNames.reduce((sum, rep) => sum + rep, 0);
 
-    const repeatedKeyNames = keyNames.map(key => {
-        return repeat.hasOwnProperty(key) ? Math.max(repeat[key], 1) : 1;
-    });
+        config = {
+            rangeMin: minmaxRange[0], 
+            rangeMax: minmaxRange[1],
+            inputTypes: {},
+            min: {},
+            max: {},
+            uniqueStrIdx: {},
+            groupMinMax: {},
+            repeat,
+            groups,
+            inputKeyNames,
+            outputKeyNames: new Array(countRepeatedKeyNames),
+            repeatedKeyNames,
+        } 
+            
+        let keyNamesIdx = 0;
 
-    const totalColumns = repeatedKeyNames.reduce((sum, rep) => sum + rep, 0);
-
-    const outputKeyNames = new Array(totalColumns);
-    let idx = 0;
-    for (let i = 0; i < keyNames.length; i++) {
-        for (let w = 0; w < repeatedKeyNames[i]; w++) {
-            outputKeyNames[idx++] = keyNames[i];
-        }
-    }
-
-    const inputTypes = {};
-    const min = {};
-    const max = {};
-    const uniqueStringIndexes = {};
-    const groupMinMax = {};
-
-    for (const key of keyNames) {
-        const firstValue = arrObj[0][key];
-        inputTypes[key] = typeof firstValue;
-
-        if (inputTypes[key] === 'string') {
-            uniqueStringIndexes[key] = {};
-        }
-
-
-
-        const thisGroup = findGroup(key, groups);
-        if (thisGroup) {
-            if (!groupMinMax[thisGroup]) {
-                groupMinMax[thisGroup] = { min: Infinity, max: -Infinity };
+        for (let i = 0; i < config.inputKeyNames.length; i++) {
+            for (let w = 0; w < config.repeatedKeyNames[i]; w++) {
+                config.outputKeyNames[keyNamesIdx++] = config.inputKeyNames[i];
             }
+        }
+
+        validateConfig(config)
+
+    }
+
+    validateUniqueProperties(config.groups);
+
+    for (const key of config.inputKeyNames) {
+
+        const firstType = typeof firstRow[key]
+
+        if(isValidPrevConfig)
+        {
+            if(!config.inputTypes.hasOwnProperty(key))
+            {
+                // If prevConfig is set, no new inputTypes can be introduced
+                throw new Error(`Error: A new unknown inputType property "${key}" found.`)
+            }
+            if(config.inputTypes[key] !== firstType)
+            {
+                 //is prevConfig is set the types of "typeof firstRow[key]" and config.inputTypes[key] must be the same
+                throw new Error(`Error: Current inputType of property "${key}" is not the same as in the prevConfig inputType.`)
+            }
+
+            continue;
+        }
+
+        config.inputTypes[key] = firstType;
+
+        if (firstType === 'string') {
+            config.uniqueStrIdx[key] = {};
+        }
+
+        const thisGroup = findGroup(key, config.groups);
+
+        if (thisGroup) {
+            config.groupMinMax[thisGroup] = { min: Infinity, max: -Infinity };
         } else
         {
-            min[key] = Infinity;
-            max[key] = -Infinity;
+            config.min[key] = Infinity;
+            config.max[key] = -Infinity;
         }
     }
 
-    for (const obj of arrObj) {
-        for (const key of keyNames) {
+    for (const obj of arrObjClone) {
+        for (const key of config.inputKeyNames) {
             let value = obj[key];
 
-            if (inputTypes[key] === 'string') {
-                const uniqueIndexes = uniqueStringIndexes[key];
+            if (config.inputTypes[key] === 'string') {
+                const uniqueIndexes = config.uniqueStrIdx[key];
                 if (!uniqueIndexes.hasOwnProperty(value)) {
                     uniqueIndexes[value] = Object.keys(uniqueIndexes).length;
                 }
                 value = uniqueIndexes[value];
                 obj[key] = value;
-            } else if (inputTypes[key] === 'boolean') {
+            } else if (config.inputTypes[key] === 'boolean') {
                 obj[key] = Number(value);
             }
 
-            const thisGroup = findGroup(key, groups);
+            const thisGroup = findGroup(key, config.groups);
 
             if (thisGroup) {
-                groupMinMax[thisGroup].min = Math.min(groupMinMax[thisGroup].min, value);
-                groupMinMax[thisGroup].max = Math.max(groupMinMax[thisGroup].max, value);
+                config.groupMinMax[thisGroup].min = Math.min(config.groupMinMax[thisGroup].min, value);
+                config.groupMinMax[thisGroup].max = Math.max(config.groupMinMax[thisGroup].max, value);
             } else {
-                min[key] = Math.min(min[key], value);
-                max[key] = Math.max(max[key], value);
+                config.min[key] = Math.min(config.min[key], value);
+                config.max[key] = Math.max(config.max[key], value);
             }
         }
     }
 
     const scaledOutput = new Array(n);
     for (let i = 0; i < n; i++) {
-        const obj = arrObj[i];
-        const scaledRow = new Array(totalColumns);
+        const obj = arrObjClone[i];
+        const scaledRow = new Array(config.outputKeyNames.length);
         let idx = 0;
 
-        for (let j = 0; j < keyNames.length; j++) {
-            const key = keyNames[j];
+        for (let j = 0; j < config.inputKeyNames.length; j++) {
+            const key = config.inputKeyNames[j];
             const value = obj[key];
 
-            const thisGroup = findGroup(key, groups);
+            const thisGroup = findGroup(key, config.groups);
             let minValue, maxValue;
 
             if (thisGroup) {
-                minValue = groupMinMax[thisGroup].min;
-                maxValue = groupMinMax[thisGroup].max;
+                minValue = config.groupMinMax[thisGroup].min;
+                maxValue = config.groupMinMax[thisGroup].max;
             } else {
-                minValue = min[key];
-                maxValue = max[key];
+                minValue = config.min[key];
+                maxValue = config.max[key];
             }
 
             const scaledValue =
                 maxValue !== minValue
-                    ? rangeMin + ((value - minValue) / (maxValue - minValue)) * (rangeMax - rangeMin)
-                    : rangeMin;
+                    ? config.rangeMin + ((value - minValue) / (maxValue - minValue)) * (config.rangeMax - config.rangeMin)
+                    : config.rangeMin;
 
-            const rep = repeatedKeyNames[j];
+            const rep = config.repeatedKeyNames[j];
 
             for (let w = 0; w < rep; w++) {
                 scaledRow[idx++] = scaledValue;
@@ -124,14 +160,14 @@ export const scaleArrayObj = ({ arrObj, repeat = {}, minmaxRange = [0, 1], group
         scaledOutput[i] = scaledRow;
     }
 
-    const scaledConfig = { min, max, inputTypes, uniqueStringIndexes, rangeMin, rangeMax, groupMinMax };
+    
 
     return {
         scaledOutput,
-        scaledConfig,
-        scaledKeyNames: outputKeyNames
+        scaledConfig: config
     };
 };
+
 
 const validateUniqueProperties = obj => {
     const uniqueValues = new Set();
@@ -160,3 +196,114 @@ const findGroup = (key, groups) => {
     }
     return null;
 };
+
+
+const validateConfig = config => {
+
+    const requiredKeys = [
+        "rangeMin",
+        "rangeMax",
+        "inputTypes",
+        "min",
+        "max",
+        "uniqueStrIdx",
+        "groupMinMax",
+        "repeat",
+        "groups",
+        "inputKeyNames",
+        "outputKeyNames",
+        "repeatedKeyNames"
+    ];
+
+    // Check for missing keys
+    for (const key of requiredKeys) {
+        if (!config.hasOwnProperty(key)) {
+            throw new Error(`Missing key "${key}" in config.`);
+        }
+    }
+
+    const { 
+        rangeMin, 
+        rangeMax, 
+        inputTypes, 
+        min, 
+        max, 
+        uniqueStrIdx, 
+        groupMinMax, 
+        repeat, 
+        groups,
+        inputKeyNames,
+        outputKeyNames,
+        repeatedKeyNames
+    } = config;
+
+    // Validate rangeMin and rangeMax are numbers and in proper order
+    if (typeof rangeMin !== 'number' || typeof rangeMax !== 'number') {
+        throw new Error("rangeMin and rangeMax must be numbers.");
+    }
+    if (rangeMin >= rangeMax) {
+        throw new Error("rangeMin must be less than rangeMax.");
+    }
+
+    // Helper to check if a value is a plain object (and not null or an array)
+    const isPlainObject = (obj) => typeof obj === 'object' && obj !== null && !Array.isArray(obj);
+
+    if (!isPlainObject(inputTypes)) {
+        throw new Error("inputTypes must be an object.");
+    }
+    if (!isPlainObject(min)) {
+        throw new Error("min must be an object.");
+    }
+    if (!isPlainObject(max)) {
+        throw new Error("max must be an object.");
+    }
+    if (!isPlainObject(uniqueStrIdx)) {
+        throw new Error("uniqueStrIdx must be an object.");
+    }
+    if (!isPlainObject(groupMinMax)) {
+        throw new Error("groupMinMax must be an object.");
+    }
+    if (!isPlainObject(repeat)) {
+        throw new Error("repeat must be an object.");
+    }
+    if (!isPlainObject(groups)) {
+        throw new Error("groups must be an object.");
+    }
+    if(!Array.isArray(inputKeyNames))
+    {
+        throw new Error("inputKeyNames must be an object.");
+    }
+    if(!Array.isArray(outputKeyNames))
+    {
+        throw new Error("outputKeyNames must be an object.");
+    }
+    if(!Array.isArray(repeatedKeyNames))
+    {
+        throw new Error("repeatedKeyNames must be an object.");
+    }
+
+    return true;
+}
+
+const validateCurrPrevConfig = (prevConfig, {minmaxRange, repeat, groups, firstRow}) => {
+
+    if(prevConfig.minmaxRange[0] !== minmaxRange[0] || prevConfig.minmaxRange[1] !== minmaxRange[1])
+    {
+        throw new Error(`"prevConfig.minmaxRange" is not equal "minmaxRange".`);
+    }
+
+    //it is important o keep the same key order
+    if (JSON.stringify(prevConfig.inputKeyNames) !== JSON.stringify(Object.keys(firstRow))) {
+        throw new Error(`"prevConfig.inputKeyNames" structure does not match "Object.keys(firstRow)" structure. The order of keys is important.`);
+    }
+
+    if (JSON.stringify(prevConfig.repeat) !== JSON.stringify(repeat)) {
+        throw new Error(`"prevConfig.repeat" structure does not match "repeat" structure. The order of keys is important.`);
+    }
+
+    if (JSON.stringify(prevConfig.groups) !== JSON.stringify(groups)) {
+        throw new Error(`"prevConfig.groups" structure does not match "groups" structure. The order of keys is important.`);
+    }
+
+    return true
+}

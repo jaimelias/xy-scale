@@ -15,9 +15,10 @@ const test = async () => {
         //returning null or undefined will exclude current row X and Y from training
         if(typeof prev === 'undefined') return null
 
-        const { open, high, low, close, volume } = curr
+        const { open, high, low, close, volume, date } = curr
 
         return {
+            date,
             open,
             high,
             low,
@@ -82,10 +83,10 @@ const test = async () => {
     const inputX = tf.tensor3d(timeSteppedTrainX, [timeSteppedTrainX.length, timeSteps, colsX])
     const targetY = tf.tensor2d(trimedTrainY,  [trimedTrainY.length, colsY])
 
-    console.log('trainX', trainX[trainX.length - 1])
-    console.log('configX', keyNamesX)
-    console.log('inputX', inputX)
-    console.log('inputX', targetY)
+    //console.log('trainX', trainX[trainX.length - 1])
+    console.log('configX', configX)
+    //console.log('inputX', inputX)
+    //console.log('inputX', targetY)
 }
 
 test()

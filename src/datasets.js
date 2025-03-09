@@ -41,15 +41,12 @@ export const parseTrainingXY = ({
 
     let {
         scaledOutput: scaledX, 
-        scaledConfig: configX, 
-        scaledKeyNames: keyNamesX
-
+        scaledConfig: configX
     } = scaleArrayObj({arrObj: X, repeat, groups, minmaxRange})
 
     let {
         scaledOutput: scaledY,
         scaledConfig: configY,
-        scaledKeyNames: keyNamesY
     } = scaleArrayObj({arrObj: Y, repeat, groups, minmaxRange})
 
 
@@ -93,11 +90,8 @@ export const parseTrainingXY = ({
         trainY,
         testX,
         testY,
-
         configX,
-        keyNamesX,
         configY,
-        keyNamesY
     };
 };
 
@@ -133,9 +127,7 @@ export const parseProductionX = ({
     // Scale X
     const {
         scaledOutput: scaledX, 
-        scaledConfig: configX, 
-        scaledKeyNames: keyNamesX
-
+        scaledConfig: configX
     } = scaleArrayObj({arrObj: X, repeat, groups, minmaxRange})
 
 
