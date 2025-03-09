@@ -1,8 +1,9 @@
-export const scaleArrayObj = ({ arrObj, repeat = {}, minmaxRange = [0, 1], groups = {}, prevConfig = null }) => {
+export const scaleArrayObj = ({ arrObj, repeat = {}, minmaxRange = [0, 1], groups = {}, prevConfig = null, customMinMaxRanges = null }) => {
     
     const arrObjClone = [...arrObj]
     const arrObjLen = arrObjClone.length;
     const firstRow = arrObjClone[0]
+    const validCustomMinMaxRanges = typeof customMinMaxRanges === 'object' && customMinMaxRanges !== null
 
     if (arrObjLen === 0) {
         return {
@@ -63,6 +64,7 @@ export const scaleArrayObj = ({ arrObj, repeat = {}, minmaxRange = [0, 1], group
     for (const key of config.inputKeyNames) {
 
         const firstType = typeof firstRow[key]
+        const thisGroup = findGroup(key, config.groups);
 
         if(isValidPrevConfig)
         {
@@ -85,15 +87,27 @@ export const scaleArrayObj = ({ arrObj, repeat = {}, minmaxRange = [0, 1], group
         if (firstType === 'string') {
             config.uniqueStrIdx[key] = {};
         }
-
-        const thisGroup = findGroup(key, config.groups);
-
-        if (thisGroup) {
-            config.groupMinMax[thisGroup] = { min: Infinity, max: -Infinity };
-        } else
+        
+        if(validCustomMinMaxRanges && customMinMaxRanges.hasOwnProperty(key))
         {
-            config.min[key] = Infinity;
-            config.max[key] = -Infinity;
+            if (thisGroup)
+            {
+                config.groupMinMax[thisGroup] = customMinMaxRanges[key]
+            }
+            else
+            {
+                config.min[key] = customMinMaxRanges[key].min;
+                config.max[key] = -customMinMaxRanges[key].max;                   
+            }
+        }
+        else {
+            if (thisGroup) {
+                config.groupMinMax[thisGroup] = { min: Infinity, max: -Infinity };
+            } 
+            else {
+                config.min[key] = Infinity;
+                config.max[key] = -Infinity;
+            }
         }
     }
 
@@ -114,13 +128,17 @@ export const scaleArrayObj = ({ arrObj, repeat = {}, minmaxRange = [0, 1], group
 
             const thisGroup = findGroup(key, config.groups);
 
-            if (thisGroup) {
-                config.groupMinMax[thisGroup].min = Math.min(config.groupMinMax[thisGroup].min, value);
-                config.groupMinMax[thisGroup].max = Math.max(config.groupMinMax[thisGroup].max, value);
-            } else {
-                config.min[key] = Math.min(config.min[key], value);
-                config.max[key] = Math.max(config.max[key], value);
+            if(validCustomMinMaxRanges === false || (validCustomMinMaxRanges && !customMinMaxRanges.hasOwnProperty(key)))
+            {
+                if (thisGroup) {
+                    config.groupMinMax[thisGroup].min = Math.min(config.groupMinMax[thisGroup].min, value);
+                    config.groupMinMax[thisGroup].max = Math.max(config.groupMinMax[thisGroup].max, value);
+                } else {
+                    config.min[key] = Math.min(config.min[key], value);
+                    config.max[key] = Math.max(config.max[key], value);
+                }
             }
+
         }
     }
 

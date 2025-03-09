@@ -64,7 +64,8 @@ const test = async () => {
             close: 20
         },
         minmaxRange: [-1, 1],
-        balancing: 'oversample'
+        balancing: 'oversample',
+        customMinMaxRanges: {}
     });
 
 

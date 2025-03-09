@@ -13,7 +13,8 @@ export const parseTrainingXY = ({
     shuffle = false,
     minmaxRange,
     balancing = '',
-    state = {}
+    state = {},
+    customMinMaxRanges
 }) => {
     let X = [];
     let Y = [];
@@ -105,7 +106,8 @@ export const parseProductionX = ({
     shuffle = false,
     minmaxRange,
     state = {},
-    prevConfig
+    prevConfig,
+    customMinMaxRanges
 }) => {
     let X = [];
 
