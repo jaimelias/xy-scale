@@ -5,7 +5,7 @@ import { oversampleXY, undersampleXY } from "./balancing.js";
 export const parseTrainingXY = ({ 
     arrObj, 
     trainingSplit = 0.8, 
-    repeat = {}, 
+    repeat, 
     yCallbackFunc, 
     xCallbackFunc,
     validateRows = row => row,
