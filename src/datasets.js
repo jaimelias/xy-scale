@@ -98,13 +98,14 @@ export const parseTrainingXY = ({
 
 export const parseProductionX = ({ 
     arrObj, 
-    repeat = {}, 
+    repeat, 
     xCallbackFunc,
     validateRows = row => row,
     groups,
     shuffle = false,
     minmaxRange,
-    state = {}
+    state = {},
+    prevConfig
 }) => {
     let X = [];
 
@@ -128,7 +129,7 @@ export const parseProductionX = ({
     const {
         scaledOutput: scaledX, 
         scaledConfig: configX
-    } = scaleArrayObj({arrObj: X, repeat, groups, minmaxRange})
+    } = scaleArrayObj({arrObj: X, repeat, groups, minmaxRange, prevConfig})
 
 
     // Split into training and testing sets

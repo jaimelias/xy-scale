@@ -17,7 +17,6 @@ export const scaleArrayObj = ({ arrObj, repeat = {}, minmaxRange = [0, 1], group
 
     if(isValidPrevConfig)
     {
-
         validateCurrPrevConfig(prevConfig, {minmaxRange, repeat, groups, firstRow})
         config = {...prevConfig}
     }
@@ -200,6 +199,8 @@ const findGroup = (key, groups) => {
 
 const validateConfig = config => {
 
+    if(!config) return false 
+
     const requiredKeys = [
         "rangeMin",
         "rangeMax",
@@ -271,15 +272,15 @@ const validateConfig = config => {
     }
     if(!Array.isArray(inputKeyNames))
     {
-        throw new Error("inputKeyNames must be an object.");
+        throw new Error("inputKeyNames must be an array.");
     }
     if(!Array.isArray(outputKeyNames))
     {
-        throw new Error("outputKeyNames must be an object.");
+        throw new Error("outputKeyNames must be an array.");
     }
     if(!Array.isArray(repeatedKeyNames))
     {
-        throw new Error("repeatedKeyNames must be an object.");
+        throw new Error("repeatedKeyNames must be an array.");
     }
 
     return true;
