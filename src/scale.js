@@ -287,7 +287,7 @@ const validateConfig = config => {
 
 const validateCurrPrevConfig = (prevConfig, {minmaxRange, repeat, groups, firstRow}) => {
 
-    if(prevConfig.minmaxRange[0] !== minmaxRange[0] || prevConfig.minmaxRange[1] !== minmaxRange[1])
+    if(prevConfig.rangeMin !== minmaxRange[0] || prevConfig.rangeMax !== minmaxRange[1])
     {
         throw new Error(`"prevConfig.minmaxRange" is not equal "minmaxRange".`);
     }
