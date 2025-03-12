@@ -97,7 +97,7 @@ export const scaleArrayObj = ({ arrObj, repeat = {}, minmaxRange = [0, 1], group
             else
             {
                 config.min[key] = customMinMaxRanges[key].min;
-                config.max[key] = -customMinMaxRanges[key].max;                   
+                config.max[key] = customMinMaxRanges[key].max;                   
             }
         }
         else {
