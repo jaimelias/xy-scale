@@ -65,7 +65,9 @@ const test = async () => {
         },
         minmaxRange: [-1, 1],
         balancing: 'oversample',
-        customMinMaxRanges: {}
+        customMinMaxRanges: {
+            close: {min: 0, max: 10000}
+        }
     });
 
 
@@ -84,8 +86,8 @@ const test = async () => {
     const inputX = tf.tensor3d(timeSteppedTrainX, [timeSteppedTrainX.length, timeSteps, colsX])
     const targetY = tf.tensor2d(trimedTrainY,  [trimedTrainY.length, colsY])
 
-    //console.log('trainX', trainX[trainX.length - 1])
-    console.log('configX', configX)
+    console.log('trainX', trainX[trainX.length - 1])
+    //console.log('configX', configX)
     //console.log('inputX', inputX)
     //console.log('inputX', targetY)
 }

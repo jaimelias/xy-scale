@@ -43,12 +43,12 @@ export const parseTrainingXY = ({
     let {
         scaledOutput: scaledX, 
         scaledConfig: configX
-    } = scaleArrayObj({arrObj: X, repeat, groups, minmaxRange})
+    } = scaleArrayObj({arrObj: X, repeat, groups, minmaxRange, customMinMaxRanges})
 
     let {
         scaledOutput: scaledY,
         scaledConfig: configY,
-    } = scaleArrayObj({arrObj: Y, repeat, groups, minmaxRange})
+    } = scaleArrayObj({arrObj: Y, repeat, groups, minmaxRange, customMinMaxRanges})
 
 
 
@@ -131,7 +131,7 @@ export const parseProductionX = ({
     const {
         scaledOutput: scaledX, 
         scaledConfig: configX
-    } = scaleArrayObj({arrObj: X, repeat, groups, minmaxRange, prevConfig})
+    } = scaleArrayObj({arrObj: X, repeat, groups, minmaxRange, prevConfig, customMinMaxRanges})
 
 
     // Split into training and testing sets
