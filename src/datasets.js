@@ -6,9 +6,9 @@ export const parseTrainingXY = ({
     arrObj, 
     trainingSplit = 0.8, 
     repeat, 
-    yCallbackFunc, 
-    xCallbackFunc,
-    validateRows = row => row,
+    yCallbackFunc = row => row, 
+    xCallbackFunc = row => row,
+    validateRows = () => true,
     groups,
     shuffle = false,
     minmaxRange,
@@ -27,7 +27,7 @@ export const parseTrainingXY = ({
         const parsedX = xCallbackFunc({ objRow: arrObj, index: x, state})
         const parsedY = yCallbackFunc({ objRow: arrObj, index: x, state})
     
-        if (parsedX !== undefined && parsedX !== null && parsedY !== undefined && parsedY !== null) {
+        if (typeof parsedX !== 'undefined' && parsedX !== null && typeof parsedY !== 'undefined' && parsedY !== null) {
             X.push(parsedX)
             Y.push(parsedY)
         }
@@ -63,26 +63,26 @@ export const parseTrainingXY = ({
 
 
     if(balancing)
+    {
+        let balance
+
+        if(balancing === 'oversample')
         {
-            let balance
-    
-            if(balancing === 'oversample')
-            {
-                balance = oversampleXY(trainX, trainY)
-                trainX = balance.X
-                trainY = balance.Y
-            }
-            else if(balancing === 'undersample')
-            {
-                balance = undersampleXY(trainX, trainY)
-                trainX = balance.X
-                trainY = balance.Y           
-            }
-            else
-            {
-                throw Error('balancing argument only accepts "false", "oversample" and "undersample". Defaults to "false".')
-            }
+            balance = oversampleXY(trainX, trainY)
+            trainX = balance.X
+            trainY = balance.Y
         }
+        else if(balancing === 'undersample')
+        {
+            balance = undersampleXY(trainX, trainY)
+            trainX = balance.X
+            trainY = balance.Y           
+        }
+        else
+        {
+            throw Error('balancing argument only accepts "false", "oversample" and "undersample". Defaults to "false".')
+        }
+    }
 
 
     // Split into training and testing sets
@@ -100,8 +100,8 @@ export const parseTrainingXY = ({
 export const parseProductionX = ({ 
     arrObj, 
     repeat, 
-    xCallbackFunc,
-    validateRows = row => row,
+    xCallbackFunc = row => row,
+    validateRows = () => true,
     groups,
     shuffle = false,
     minmaxRange,
@@ -117,7 +117,7 @@ export const parseProductionX = ({
 
         const parsedX = xCallbackFunc({ objRow: arrObj, index: x, state})
 
-        if (parsedX) {
+        if (typeof parsedX !== 'undefined' && parsedX !== null && parsedX !== false) {
             X.push(parsedX)
         }
     }
