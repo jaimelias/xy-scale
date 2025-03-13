@@ -138,6 +138,5 @@ export const parseProductionX = ({
     return {
         X: scaledX,
         configX,
-        keyNamesX
     }
 };
