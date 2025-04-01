@@ -38,7 +38,6 @@ export const scaleArrayObj = ({ arrObj, repeat = {}, minmaxRange = [0, 1], group
             inputTypes: {},
             min: {},
             max: {},
-            uniqueStrIdx: {},
             groupMinMax: {},
             repeat,
             groups,
@@ -61,10 +60,18 @@ export const scaleArrayObj = ({ arrObj, repeat = {}, minmaxRange = [0, 1], group
 
     validateUniqueProperties(config.groups);
 
+    const validInputTypes = ['number', 'boolean']
+
     for (const key of config.inputKeyNames) {
 
         const firstType = typeof firstRow[key]
         const thisGroup = findGroup(key, config.groups);
+
+
+        if(!validInputTypes.includes(firstType))
+        {
+            throw new Error(`Invalid input type "${firstType}" provided for key "${key}". Only accepting `)
+        }
 
         if(isValidPrevConfig)
         {
@@ -83,10 +90,6 @@ export const scaleArrayObj = ({ arrObj, repeat = {}, minmaxRange = [0, 1], group
         }
 
         config.inputTypes[key] = firstType;
-
-        if (firstType === 'string') {
-            config.uniqueStrIdx[key] = {};
-        }
         
         if(validCustomMinMaxRanges && customMinMaxRanges.hasOwnProperty(key))
         {
@@ -115,14 +118,7 @@ export const scaleArrayObj = ({ arrObj, repeat = {}, minmaxRange = [0, 1], group
         for (const key of config.inputKeyNames) {
             let value = obj[key];
 
-            if (config.inputTypes[key] === 'string') {
-                const uniqueIndexes = config.uniqueStrIdx[key];
-                if (!uniqueIndexes.hasOwnProperty(value)) {
-                    uniqueIndexes[value] = Object.keys(uniqueIndexes).length;
-                }
-                value = uniqueIndexes[value];
-                obj[key] = value;
-            } else if (config.inputTypes[key] === 'boolean') {
+            if (config.inputTypes[key] === 'boolean') {
                 obj[key] = Number(value);
             }
 
@@ -226,7 +222,6 @@ const validateConfig = config => {
         "inputTypes",
         "min",
         "max",
-        "uniqueStrIdx",
         "groupMinMax",
         "repeat",
         "groups",
@@ -248,7 +243,6 @@ const validateConfig = config => {
         inputTypes, 
         min, 
         max, 
-        uniqueStrIdx, 
         groupMinMax, 
         repeat, 
         groups,
@@ -276,9 +270,6 @@ const validateConfig = config => {
     }
     if (!isPlainObject(max)) {
         throw new Error("max must be an object.");
-    }
-    if (!isPlainObject(uniqueStrIdx)) {
-        throw new Error("uniqueStrIdx must be an object.");
     }
     if (!isPlainObject(groupMinMax)) {
         throw new Error("groupMinMax must be an object.");

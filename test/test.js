@@ -5,7 +5,8 @@ import * as tf from '@tensorflow/tfjs-node'
 
 const test = async () => {
 
-    const myArray = (await loadFile({fileName: '1d-spy.json', pathName: 'datasets'})) //file in /datasets/1d-spy.json
+    const myArray = (await loadFile({fileName: '1d-spy.json', pathName: 'datasets'}))
+    .map(({open, high, low, close}) => ({open, high, low, close})) //file in /datasets/1d-spy.json
     
     //callback function used to prepare X before scaling
     const xCallbackFunc = ({ objRow, index }) => {
@@ -15,10 +16,9 @@ const test = async () => {
         //returning null or undefined will exclude current row X and Y from training
         if(typeof prev === 'undefined') return null
 
-        const { open, high, low, close, volume, date } = curr
+        const { open, high, low, close } = curr
 
         return {
-            date,
             open,
             high,
             low,
