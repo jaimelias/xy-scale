@@ -22,7 +22,7 @@ export const parseTrainingXY = ({
     //if parsedX and parsedY is undefined or null the current row will be excluded from training or production
     for (let x = 0; x < arrObj.length; x++) {
 
-        if(!validateRows(arrObj[x])) continue
+        if(!validateRows({ objRow: arrObj, index: x, state})) continue
 
         const parsedX = xCallbackFunc({ objRow: arrObj, index: x, state})
         const parsedY = yCallbackFunc({ objRow: arrObj, index: x, state})
