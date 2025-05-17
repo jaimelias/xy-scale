@@ -106,7 +106,6 @@ export const parseProductionX = ({
     shuffle = false,
     minmaxRange,
     state = {},
-    prevConfig,
     customMinMaxRanges
 }) => {
     let X = [];
@@ -131,7 +130,7 @@ export const parseProductionX = ({
     const {
         scaledOutput: scaledX, 
         scaledConfig: configX
-    } = scaleArrayObj({arrObj: X, repeat, groups, minmaxRange, prevConfig, customMinMaxRanges})
+    } = scaleArrayObj({arrObj: X, repeat, groups, minmaxRange, customMinMaxRanges})
 
 
     // Split into training and testing sets
