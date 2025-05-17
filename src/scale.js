@@ -1,4 +1,4 @@
-export const scaleArrayObj = ({ arrObj, repeat = {}, minmaxRange = [0, 1], groups = {}, prevConfig = null, customMinMaxRanges = null }) => {
+export const scaleArrayObj = ({ arrObj, repeat = {}, minmaxRange = [0, 1], groups = {}, customMinMaxRanges = null }) => {
     
     const arrObjClone = [...arrObj]
     const arrObjLen = arrObjClone.length;
@@ -11,51 +11,36 @@ export const scaleArrayObj = ({ arrObj, repeat = {}, minmaxRange = [0, 1], group
             scaledConfig: {}
         };
     }
-
-    let config = {}
-
-    const isValidPrevConfig = prevConfig && validateConfig(prevConfig)
-
-    if(isValidPrevConfig)
-    {
-        validateCurrPrevConfig(prevConfig, {minmaxRange, repeat, groups, firstRow})
-        config = {...prevConfig}
-    }
-    else
-    {
-        const inputKeyNames = Object.keys(firstRow);
-
-        const repeatedKeyNames = inputKeyNames.map(key => {
-            return repeat.hasOwnProperty(key) ? Math.max(repeat[key], 1) : 1;
-        });
     
-        const countRepeatedKeyNames = repeatedKeyNames.reduce((sum, rep) => sum + rep, 0);
+    const inputKeyNames = Object.keys(firstRow);
 
-        config = {
-            arrObjLen,
-            rangeMin: minmaxRange[0], 
-            rangeMax: minmaxRange[1],
-            inputTypes: {},
-            min: {},
-            max: {},
-            groupMinMax: {},
-            repeat,
-            groups,
-            inputKeyNames,
-            outputKeyNames: new Array(countRepeatedKeyNames),
-            repeatedKeyNames,
+    const repeatedKeyNames = inputKeyNames.map(key => {
+        return repeat.hasOwnProperty(key) ? Math.max(repeat[key], 1) : 1;
+    });
+
+    const countRepeatedKeyNames = repeatedKeyNames.reduce((sum, rep) => sum + rep, 0);
+
+    const config = {
+        arrObjLen,
+        rangeMin: minmaxRange[0], 
+        rangeMax: minmaxRange[1],
+        inputTypes: {},
+        min: {},
+        max: {},
+        groupMinMax: {},
+        repeat,
+        groups,
+        inputKeyNames,
+        outputKeyNames: new Array(countRepeatedKeyNames),
+        repeatedKeyNames,
+    }
+        
+    let keyNamesIdx = 0;
+
+    for (let i = 0; i < config.inputKeyNames.length; i++) {
+        for (let w = 0; w < config.repeatedKeyNames[i]; w++) {
+            config.outputKeyNames[keyNamesIdx++] = config.inputKeyNames[i];
         }
-            
-        let keyNamesIdx = 0;
-
-        for (let i = 0; i < config.inputKeyNames.length; i++) {
-            for (let w = 0; w < config.repeatedKeyNames[i]; w++) {
-                config.outputKeyNames[keyNamesIdx++] = config.inputKeyNames[i];
-            }
-        }
-
-        validateConfig(config)
-
     }
 
     validateUniqueProperties(config.groups);
@@ -71,22 +56,6 @@ export const scaleArrayObj = ({ arrObj, repeat = {}, minmaxRange = [0, 1], group
         if(!validInputTypes.includes(firstType))
         {
             throw new Error(`Invalid input type "${firstType}" provided for key "${key}". Only accepting `)
-        }
-
-        if(isValidPrevConfig)
-        {
-            if(!config.inputTypes.hasOwnProperty(key))
-            {
-                // If prevConfig is set, no new inputTypes can be introduced
-                throw new Error(`Error: A new unknown inputType property "${key}" found.`)
-            }
-            if(config.inputTypes[key] !== firstType)
-            {
-                 //is prevConfig is set the types of "typeof firstRow[key]" and config.inputTypes[key] must be the same
-                throw new Error(`Error: Current inputType of property "${key}" is not the same as in the prevConfig inputType.`)
-            }
-
-            continue;
         }
 
         config.inputTypes[key] = firstType;
@@ -294,27 +263,4 @@ const validateConfig = config => {
     }
 
     return true;
-}
-
-const validateCurrPrevConfig = (prevConfig, {minmaxRange, repeat, groups, firstRow}) => {
-
-    if(prevConfig.rangeMin !== minmaxRange[0] || prevConfig.rangeMax !== minmaxRange[1])
-    {
-        throw new Error(`"prevConfig.minmaxRange" is not equal "minmaxRange".`);
-    }
-
-    //it is important o keep the same key order
-    if (JSON.stringify(prevConfig.inputKeyNames) !== JSON.stringify(Object.keys(firstRow))) {
-        throw new Error(`"prevConfig.inputKeyNames" structure does not match "Object.keys(firstRow)" structure. The order of keys is important.`);
-    }
-
-    if (JSON.stringify(prevConfig.repeat) !== JSON.stringify(repeat)) {
-        throw new Error(`"prevConfig.repeat" structure does not match "repeat" structure. The order of keys is important.`);
-    }
-
-    if (JSON.stringify(prevConfig.groups) !== JSON.stringify(groups)) {
-        throw new Error(`"prevConfig.groups" structure does not match "groups" structure. The order of keys is important.`);
-    }
-
-    return true
 }
