@@ -3,18 +3,19 @@ import { arrayShuffle, xyArrayShuffle } from "./utilities.js";
 import { oversampleXY, undersampleXY } from "./balancing.js";
 
 export const parseTrainingXY = ({ 
-    arrObj, 
+    arrObj = [], 
     trainingSplit = 0.8, 
-    repeat, 
+    repeat = {}, 
     yCallbackFunc = row => row, 
     xCallbackFunc = row => row,
     validateRows = () => true,
-    groups,
+    groups = {},
     shuffle = false,
-    minmaxRange,
+    minmaxRange = [],
     balancing = '',
     state = {},
-    customMinMaxRanges
+    customMinMaxRanges = {},
+    excludes = []
 }) => {
     let X = [];
     let Y = [];
@@ -40,15 +41,17 @@ export const parseTrainingXY = ({
         Y = shuffledY
     }
 
+    const excludesSet = new Set(excludes)
+
     let {
         scaledOutput: scaledX, 
         scaledConfig: configX
-    } = scaleArrayObj({arrObj: X, repeat, groups, minmaxRange, customMinMaxRanges})
+    } = scaleArrayObj({arrObj: X, repeat, groups, minmaxRange, customMinMaxRanges, excludes: excludesSet})
 
     let {
         scaledOutput: scaledY,
         scaledConfig: configY,
-    } = scaleArrayObj({arrObj: Y, repeat, groups, minmaxRange, customMinMaxRanges})
+    } = scaleArrayObj({arrObj: Y, repeat, groups, minmaxRange, customMinMaxRanges, excludes: excludesSet})
 
 
 
@@ -98,15 +101,16 @@ export const parseTrainingXY = ({
 
 
 export const parseProductionX = ({ 
-    arrObj, 
-    repeat, 
+    arrObj = [], 
+    repeat = {}, 
     xCallbackFunc = row => row,
     validateRows = () => true,
-    groups,
+    groups = {},
     shuffle = false,
-    minmaxRange,
+    minmaxRange = [],
     state = {},
-    customMinMaxRanges
+    customMinMaxRanges,
+    excludes = []
 }) => {
     let X = [];
 
@@ -126,11 +130,12 @@ export const parseProductionX = ({
         X = arrayShuffle(X)
     }
 
+
     // Scale X
     const {
         scaledOutput: scaledX, 
         scaledConfig: configX
-    } = scaleArrayObj({arrObj: X, repeat, groups, minmaxRange, customMinMaxRanges})
+    } = scaleArrayObj({arrObj: X, repeat, groups, minmaxRange, customMinMaxRanges, excludes: new Set(excludes)})
 
 
     // Split into training and testing sets

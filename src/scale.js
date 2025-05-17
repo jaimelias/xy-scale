@@ -1,4 +1,4 @@
-export const scaleArrayObj = ({ arrObj, repeat = {}, minmaxRange = [0, 1], groups = {}, customMinMaxRanges = null }) => {
+export const scaleArrayObj = ({ arrObj, repeat = {}, minmaxRange = [0, 1], groups = {}, customMinMaxRanges = null, excludes = new Set() }) => {
     
     const arrObjClone = [...arrObj]
     const arrObjLen = arrObjClone.length;
@@ -32,7 +32,7 @@ export const scaleArrayObj = ({ arrObj, repeat = {}, minmaxRange = [0, 1], group
         groups,
         inputKeyNames,
         outputKeyNames: new Array(countRepeatedKeyNames),
-        repeatedKeyNames,
+        repeatedKeyNames
     }
         
     let keyNamesIdx = 0;
@@ -48,6 +48,12 @@ export const scaleArrayObj = ({ arrObj, repeat = {}, minmaxRange = [0, 1], group
     const validInputTypes = ['number', 'boolean']
 
     for (const key of config.inputKeyNames) {
+
+        if(excludes.has(key))
+        {
+            config.inputTypes[key] = 'excluded'
+            continue
+        }
 
         const firstType = typeof firstRow[key]
         const thisGroup = findGroup(key, config.groups);
@@ -85,6 +91,12 @@ export const scaleArrayObj = ({ arrObj, repeat = {}, minmaxRange = [0, 1], group
 
     for (const obj of arrObjClone) {
         for (const key of config.inputKeyNames) {
+
+            if (config.inputTypes[key] === 'excluded')
+            {
+                continue;
+            }
+
             let value = obj[key];
 
             if (config.inputTypes[key] === 'boolean') {
@@ -108,24 +120,32 @@ export const scaleArrayObj = ({ arrObj, repeat = {}, minmaxRange = [0, 1], group
     }
 
     const scaledOutput = new Array(arrObjLen);
+
+    
     for (let i = 0; i < arrObjLen; i++) {
         const obj = arrObjClone[i];
         const scaledRow = new Array(config.outputKeyNames.length);
         let idx = 0;
 
         for (let j = 0; j < config.inputKeyNames.length; j++) {
-            const key = config.inputKeyNames[j];
-            const value = obj[key];
+            const key = config.inputKeyNames[j]
+            const value = obj[key]
+
+            if (config.inputTypes[key] === 'excluded')
+            {
+                scaledRow[idx++] = value
+                continue
+            }
 
             const thisGroup = findGroup(key, config.groups);
-            let minValue, maxValue;
+            let minValue, maxValue
 
             if (thisGroup) {
-                minValue = config.groupMinMax[thisGroup].min;
-                maxValue = config.groupMinMax[thisGroup].max;
+                minValue = config.groupMinMax[thisGroup].min
+                maxValue = config.groupMinMax[thisGroup].max
             } else {
-                minValue = config.min[key];
-                maxValue = config.max[key];
+                minValue = config.min[key]
+                maxValue = config.max[key]
             }
 
             const scaledValue =
@@ -133,14 +153,14 @@ export const scaleArrayObj = ({ arrObj, repeat = {}, minmaxRange = [0, 1], group
                     ? config.rangeMin + ((value - minValue) / (maxValue - minValue)) * (config.rangeMax - config.rangeMin)
                     : config.rangeMin;
 
-            const rep = config.repeatedKeyNames[j];
+            const rep = config.repeatedKeyNames[j]
 
             for (let w = 0; w < rep; w++) {
-                scaledRow[idx++] = scaledValue;
+                scaledRow[idx++] = scaledValue
             }
             
         }
-        scaledOutput[i] = scaledRow;
+        scaledOutput[i] = scaledRow
     }
 
     
@@ -148,8 +168,8 @@ export const scaleArrayObj = ({ arrObj, repeat = {}, minmaxRange = [0, 1], group
     return {
         scaledOutput,
         scaledConfig: config
-    };
-};
+    }
+}
 
 
 const validateUniqueProperties = obj => {

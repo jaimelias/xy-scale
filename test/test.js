@@ -56,11 +56,14 @@ const test = async () => {
         shuffle: false,
         minmaxRange: [0, 1],
         balancing: null,
-        groups: scaledGroups
+        groups: scaledGroups,
+        excludes: ['high']
     });
 
     //console.log(configX.outputKeyNames)
-    console.log(configX)
+    //console.log(configX)
+
+    console.log('trainX', trainX[0])
 
     tensorflowExample({
         trainX,
@@ -137,6 +140,7 @@ const xCallbackFunc = ({ objRow, index }) => {
     //console.log(((curr.sma_300 - curr.low) / curr.low) * 100)
 
     const output = {
+        high: curr.high,
         ema50IsUp: curr.ema_50 > prev.ema_50,
         ema50GtSma200: curr.ema_50 > curr.sma_200,
         ema50GtSma300: curr.ema_50 > curr.sma_300,
