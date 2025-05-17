@@ -11,7 +11,7 @@ export const parseTrainingXY = ({
     validateRows = () => true,
     groups = {},
     shuffle = false,
-    minmaxRange = [],
+    minmaxRange = [0, 1],
     balancing = '',
     state = {},
     customMinMaxRanges = {},
@@ -107,7 +107,7 @@ export const parseProductionX = ({
     validateRows = () => true,
     groups = {},
     shuffle = false,
-    minmaxRange = [],
+    minmaxRange = [0, 1],
     state = {},
     customMinMaxRanges,
     excludes = []

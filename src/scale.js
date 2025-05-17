@@ -1,4 +1,4 @@
-export const scaleArrayObj = ({ arrObj, repeat = {}, minmaxRange = [0, 1], groups = {}, customMinMaxRanges = null, excludes = new Set() }) => {
+export const scaleArrayObj = ({ arrObj, repeat = {}, minmaxRange, groups = {}, customMinMaxRanges = null, excludes = new Set() }) => {
     
     const arrObjClone = [...arrObj]
     const arrObjLen = arrObjClone.length;
