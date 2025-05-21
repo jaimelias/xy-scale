@@ -1,6 +1,8 @@
 import { scaleArrayObj } from "./scale.js";
 import { arrayShuffle, xyArrayShuffle } from "./utilities.js";
 import { oversampleXY, undersampleXY } from "./balancing.js";
+import { validateFirstRow, validateArray } from "./validators.js";
+
 
 export const parseTrainingXY = ({ 
     arrObj = [], 
@@ -19,6 +21,9 @@ export const parseTrainingXY = ({
 }) => {
     let X = [];
     let Y = [];
+
+    validateArray(arrObj, {min: 5}, 'parseTrainingXY')
+    validateFirstRow(arrObj[0])
 
     //if parsedX and parsedY is undefined or null the current row will be excluded from training or production
     for (let x = 0; x < arrObj.length; x++) {
@@ -113,6 +118,9 @@ export const parseProductionX = ({
     excludes = []
 }) => {
     let X = [];
+
+    validateArray(arrObj, {min: 5}, 'parseProductionX')
+    validateFirstRow(arrObj[0])
 
     for (let x = 0; x < arrObj.length; x++) {
 
