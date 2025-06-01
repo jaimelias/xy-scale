@@ -21,8 +21,11 @@ export const validateFirstRow = row => {
 
     for(const [k, v] of Object.entries(row))
     {
-      if (typeof v !== 'number' || Number.isNaN(v)) {
+      if (typeof v === 'number' && Number.isNaN(v)) {
         throw new Error(`Invalid value at index 0 property "${k}": value is "${v}". Expected a numeric value.`);
+      }
+      if (v === null) {
+        throw new Error(`Invalid value at index 0 property "${k}": value is "${v}".`);
       }
     }
     
