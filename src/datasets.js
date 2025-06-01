@@ -2,7 +2,6 @@ import { scaleArrayObj } from "./scale.js";
 import { arrayShuffle, xyArrayShuffle } from "./utilities.js";
 import { oversampleXY, undersampleXY } from "./balancing.js";
 import { validateFirstRow, validateArray } from "./validators.js";
-import { analizeCorrelation } from "./correlation.js";
 import { correlation } from "ohlcv-indicators/src/studies/correlation.js";
 
 //ADD A PARAM max correlation that will measure the correlation between variables if defined
@@ -21,17 +20,12 @@ export const parseTrainingXY = ({
     state = {}, //accepted object or classes
     customMinMaxRanges = {},
     excludes = [],//each item must be a string
-    correlation = {}
 }) => {
     let X = [];
     let Y = [];
 
     validateArray(arrObj, {min: 5}, 'parseTrainingXY')
     validateFirstRow(arrObj[0])
-
-    const {corrSplit = 0.2, corrExcludes = [], corrThreshold = 0.95} = correlation
-
-    analizeCorrelation({arrObj, corrSplit, corrExcludes: new Set(corrExcludes), corrThreshold})
 
     //if parsedX and parsedY is undefined or null the current row will be excluded from training or production
     for (let x = 0; x < arrObj.length; x++) {
