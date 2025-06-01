@@ -14,7 +14,7 @@
     "@tensorflow/tfjs-node": "^4.22.0",
     "ml-confusion-matrix": "^2.0.0",
     "ml-knn": "^3.0.0",
-    "ohlcv-indicators": "^3.4.1",
+    "ohlcv-indicators": "^3.4.7",
     "webpack": "^5.96.1",
     "webpack-cli": "^5.1.4"
   },

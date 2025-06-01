@@ -19,13 +19,12 @@ export const validateArray = (arr, {min = -Infinity, max = Infinity}, paramName)
 
 export const validateFirstRow = row => {
 
-    const firstRow = Object.entries(row)
-
-    firstRow.forEach((k, v) => {
-      if (typeof v === 'undefined' || v === null || Number.isNaN(v)) {
-        throw new Error(`Invalid value at index ${k}: value is ${v}. Expected a defined, non-null, numeric value.`);
+    for(const [k, v] of Object.entries(row))
+    {
+      if (typeof v !== 'number' || Number.isNaN(v)) {
+        throw new Error(`Invalid value at index 0 property "${k}": value is "${v}". Expected a numeric value.`);
       }
-    })
-
+    }
+    
     return true
 }

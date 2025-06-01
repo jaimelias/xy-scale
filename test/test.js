@@ -27,7 +27,9 @@ const test = async () => {
             {fast: 'price', slow: 'bollinger_bands_upper'}
         ])
 
-    const parsedOhlcv = indicators.getData()
+    const parsedOhlcv = indicators.getData({dateFormat: 'milliseconds'})
+
+    console.log(parsedOhlcv.slice(-1))
 
     const {scaledGroups} = indicators
 
@@ -57,7 +59,8 @@ const test = async () => {
         minmaxRange: [0, 1],
         balancing: null,
         groups: scaledGroups,
-        excludes: ['high']
+        excludes: ['high'],
+        correlation: {corrExcludes: ['price_x_sma_300', 'price_x_sma_200']}
     });
 
     //console.log(configX.outputKeyNames)
