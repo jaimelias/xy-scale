@@ -1,3 +1,19 @@
+export const validateExcludes = (row, excludes) => {
+
+  const keyNames = Object.keys(row)
+
+  if(!Array.isArray(excludes))
+  {
+    throw new Error(`Property "excludes" must be an array.`)
+  }
+
+  for(const k of excludes)
+  {
+    if(!keyNames.includes(k)) throw new Error(`An item in "excludes" property was not found in "arrObj".\n\nexcludes: ${JSON.stringify(excludes)}\n\narrObj: ${JSON.stringify(keyNames)}`)
+  }
+
+}
+
 export const validateArray = (arr, {min = -Infinity, max = Infinity}, paramName) => {
 
     if(!Array.isArray(arr))

@@ -29,11 +29,11 @@ const test = async () => {
 
     const parsedOhlcv = indicators.getData({dateFormat: 'milliseconds'})
 
-    console.log(parsedOhlcv.slice(-1))
+    //console.log(parsedOhlcv.slice(-1))
 
     const {scaledGroups} = indicators
 
-    console.log(scaledGroups)
+    //console.log(scaledGroups)
 
     const {
         trainX,
@@ -55,19 +55,23 @@ const test = async () => {
 
             return curr.ema_50 > curr.sma_300 && curr.sma_200 > curr.sma_300 && (curr.price_x_sma_300 === -1 || curr.price_x_sma_300 === 1)
         },
-        shuffle: false,
+        shuffle: true,
         minmaxRange: [0, 1],
         balancing: null,
         groups: scaledGroups,
-        excludes: ['high'],
+        excludes: ['high2'],
         correlation: {corrExcludes: ['price_x_sma_300', 'price_x_sma_200']}
     });
 
-    //console.log(configX.outputKeyNames)
+    console.log(configX.outputKeyNames)
+    console.log(configX.inputTypes)
     //console.log(configX)
 
-    console.log('trainX', trainX[0])
+    //console.log('trainX', trainX[0])
 
+
+
+/* 
     tensorflowExample({
         trainX,
         trainY,
@@ -85,7 +89,7 @@ const test = async () => {
         configX,
         keyNamesX,
     })
-
+ */
  
 }
 
