@@ -14,14 +14,14 @@ const test = async () => {
     const indicators = new OHLCV_INDICATORS({input: ohlcv, ticker: 'BTC', precision: false})
 
     indicators
-        .rsi(40)
+        .rsi(14)
         .bollingerBands(20, 2)
         .ema(50)
         .sma(200)
         .sma(300)
         .scaler(200, ['open', 'high', 'low', 'close'], {group: true})
         .crossPairs([
-            {fast: 'rsi_40', slow: 30},
+            {fast: 'rsi_14', slow: 30},
             {fast: 'price', slow: 'sma_200'},
             {fast: 'price', slow: 'sma_300'},
             {fast: 'price', slow: 'bollinger_bands_upper'}
@@ -32,8 +32,6 @@ const test = async () => {
     //console.log(parsedOhlcv.slice(-1))
 
     const {scaledGroups} = indicators
-
-    //console.log(scaledGroups)
 
     const {
         trainX,
@@ -59,15 +57,14 @@ const test = async () => {
         minmaxRange: [0, 1],
         balancing: null,
         groups: scaledGroups,
-        excludes: ['high2'],
-        correlation: {corrExcludes: ['price_x_sma_300', 'price_x_sma_200']}
+        excludes: ['high']
     });
 
     console.log(configX.outputKeyNames)
     console.log(configX.inputTypes)
     //console.log(configX)
 
-    //console.log('trainX', trainX[0])
+    console.log('trainX', [trainX[0], trainX.at(-1)])
 
 
 
@@ -153,7 +150,9 @@ const xCallbackFunc = ({ objRow, index }) => {
         ema50GtSma300: curr.ema_50 > curr.sma_300,
         sma200IsUp: curr.sma_200 > prev.sma_200,
         sma200GtSma300: curr.sma_200 > prev.sma_300,
-        sma_300IsUp: curr.sma_300 > prev.sma_300
+        sma_300IsUp: curr.sma_300 > prev.sma_300,
+        rsi_14: curr.rsi_14,
+        rsi_sma_14: curr.rsi_sma_14,
     }
 
     for(const [key, value]  of Object.entries(curr))
