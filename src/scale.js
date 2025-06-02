@@ -5,18 +5,25 @@ export const scaleArrayObj = ({ arrObj, repeat = {}, minmaxRange, groups = {}, c
         2. excluded items can not be grouped
         3. excluded items can not be in customMixMaxRanges
         4. customMixMaxRanges items can not be grouped
+        6. customMixMaxRanges items can not be excluded
         5. customMixMaxRanges can be repeated
-        6. hierarchy order: excluded items,  customMixMaxRanges items , grouped items
-        7. customMixMaxRanges min and max must not be updated from values
+        7. hierarchy order: 1 excluded items,  2 customMixMaxRanges items , 3 grouped items, 4 any other item
+        6. customMixMaxRanges min and max must not be updated from values
     */
 
     const arrObjClone = arrObj.map(row => ({ ...row })) //[...arrObj] modified june 2
     const arrObjLen = arrObjClone.length;
     const firstRow = arrObjClone[0]
-
-    validateUniqueProperties({excludes, groups, customMinMaxRanges})
-
     const inputKeyNames = Object.keys(firstRow);
+
+    const groupSets = {}
+
+    for(const [k, g] of Object.entries(groups))
+    {
+        groupSets[k] = new Set(g)
+    }
+
+    validateUniqueProperties({excludes, groupSets, customMinMaxRanges, inputKeyNames, repeat})
 
     const repeatedKeyNames = inputKeyNames.map(key => {
         return repeat.hasOwnProperty(key) ? Math.max(repeat[key], 1) : 1;
@@ -33,7 +40,7 @@ export const scaleArrayObj = ({ arrObj, repeat = {}, minmaxRange, groups = {}, c
         max: {},
         groupMinMax: {},
         repeat,
-        groups,
+        groupSets,
         inputKeyNames,
         outputKeyNames: new Array(countRepeatedKeyNames),
         repeatedKeyNames
@@ -58,7 +65,7 @@ export const scaleArrayObj = ({ arrObj, repeat = {}, minmaxRange, groups = {}, c
         }
 
         const firstType = typeof firstRow[key]
-        const thisGroup = findGroup(key, config.groups);
+        const thisGroup = findGroup(key, config.groupSets);
 
 
         if(!validInputTypes.includes(firstType))
@@ -74,7 +81,7 @@ export const scaleArrayObj = ({ arrObj, repeat = {}, minmaxRange, groups = {}, c
             config.min[key] = customMinMaxRanges[key].min;
             config.max[key] = customMinMaxRanges[key].max;
         }
-        else if(thisGroup){
+        else if(thisGroup && !config.groupMinMax.hasOwnProperty(thisGroup)){
             config.groupMinMax[thisGroup] = { min: Infinity, max: -Infinity };
         }
         else {
@@ -98,7 +105,7 @@ export const scaleArrayObj = ({ arrObj, repeat = {}, minmaxRange, groups = {}, c
                 value = obj[key]
             }
 
-            const thisGroup = findGroup(key, config.groups)
+            const thisGroup = findGroup(key, config.groupSets)
 
             if(!customMinMaxRanges.hasOwnProperty(key))
             {
@@ -133,7 +140,7 @@ export const scaleArrayObj = ({ arrObj, repeat = {}, minmaxRange, groups = {}, c
             }
             else
             {
-                const thisGroup = findGroup(key, config.groups);
+                const thisGroup = findGroup(key, config.groupSets);
                 let minValue, maxValue
 
                 if (thisGroup) {
@@ -170,26 +177,86 @@ export const scaleArrayObj = ({ arrObj, repeat = {}, minmaxRange, groups = {}, c
 }
 
 
-const validateUniqueProperties = ({excludes, groups, customMinMaxRanges}) => {
-    for (const key of excludes) {
-        if (customMinMaxRanges.hasOwnProperty(key)) {
-            throw new Error(`Property "${key}" is in "excludes" and in "customMinMaxRanges".`);
-        }
-        if (findGroup(key, groups)) {
-            throw new Error(`Property "${key}" is in "excludes" and in a "group".`);
-        }
+const validateUniqueProperties = ({
+  excludes,
+  groupSets,
+  customMinMaxRanges,
+  repeat,
+  inputKeyNames
+}) => {
+  // 0. Ensure every 'repeat' key actually exists in inputKeyNames
+  for (const key of Object.keys(repeat)) {
+    if (!inputKeyNames.includes(key)) {
+      throw new Error(`"repeat" references missing key "${key}".`);
     }
-    // Ninguna key en customMinMaxRanges puede aparecer en groups
-    for (const key of Object.keys(customMinMaxRanges)) {
-        if (findGroup(key, groups)) {
-            throw new Error(`Property "${key}" is in "customMinMaxRanges" and in the same "group".`);
-        }
+  }
+
+  // 1. Ensure every excluded key actually exists in inputKeyNames
+  for (const key of excludes) {
+    if (!inputKeyNames.includes(key)) {
+      throw new Error(`Excluded property "${key}" does not exist in inputKeyNames.`);
     }
+  }
+
+  // 2. Ensure every customMinMaxRanges key exists in inputKeyNames
+  for (const key of Object.keys(customMinMaxRanges)) {
+    if (!inputKeyNames.includes(key)) {
+      throw new Error(`customMinMaxRanges property "${key}" does not exist in inputKeyNames.`);
+    }
+  }
+
+  // 3. Ensure every group member exists in inputKeyNames, and detect if a key appears in more than one group
+  const seenInGroup = new Set();
+  for (const [groupName, members] of Object.entries(groupSets)) {
+    for (const key of members) {
+      if (!inputKeyNames.includes(key)) {
+        throw new Error(`Group "${groupName}" references missing key "${key}".`);
+      }
+      if (seenInGroup.has(key)) {
+        throw new Error(`Property "${key}" appears in more than one group.`);
+      }
+      seenInGroup.add(key);
+    }
+  }
+
+  // 4a. A key cannot be both in excludes and in customMinMaxRanges
+  for (const key of excludes) {
+    if (customMinMaxRanges.hasOwnProperty(key)) {
+      throw new Error(`Property "${key}" is in both "excludes" and "customMinMaxRanges".`);
+    }
+  }
+
+  // 4b. A key in excludes cannot be grouped
+  for (const key of excludes) {
+    if (findGroup(key, groupSets)) {
+      throw new Error(`Property "${key}" is in "excludes" and also appears in a group.`);
+    }
+  }
+
+  // 4c. A key in customMinMaxRanges cannot be grouped
+  for (const key of Object.keys(customMinMaxRanges)) {
+    if (findGroup(key, groupSets)) {
+      throw new Error(
+        `Property "${key}" is in "customMinMaxRanges" and also appears in a group.`
+      );
+    }
+  }
+
+  // 5. Ensure customMinMaxRanges[key].min <= customMinMaxRanges[key].max
+  for (const [key, { min, max }] of Object.entries(customMinMaxRanges)) {
+    if (min > max) {
+      throw new Error(
+        `customMinMaxRanges["${key}"].min (${min}) > max (${max}).`
+      );
+    }
+  }
 };
 
-const findGroup = (key, groups) => {
-    for (const [groupK, groupV] of Object.entries(groups)) {
-        if (groupV.includes(key)) {
+
+
+const findGroup = (key, groupSets) => {
+    for (const [groupK, groupV] of Object.entries(groupSets)) {
+        if (groupV.has(key)) {
             return groupK;
         }
     }

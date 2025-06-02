@@ -57,7 +57,10 @@ const test = async () => {
         minmaxRange: [0, 1],
         balancing: null,
         groups: scaledGroups,
-        excludes: ['high']
+        excludes: ['high'],
+        repeat: {
+            high2: 100
+        }
     });
 
     console.log(configX.outputKeyNames)
