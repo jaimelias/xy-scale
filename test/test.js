@@ -52,7 +52,7 @@ const test = async () => {
 
             return false
         },
-        shuffle: true,
+        shuffle: false,
         balancing: null,
     });
 
@@ -86,7 +86,7 @@ const yCallbackFunc = ({ objRow, index }) => {
     if (typeof next === 'undefined') return null
     
     return {
-        result: Number(next.close > next.open)
+        result: Number(next.close > next.open) //the output shoud must be an array to preserve the key->value order
     }
 }
 
