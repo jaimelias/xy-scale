@@ -1,32 +1,24 @@
-import { scaleArrayObj } from "./scale.js";
 import { arrayShuffle, xyArrayShuffle } from "./utilities.js";
 import { oversampleXY, undersampleXY } from "./balancing.js";
 import { validateFirstRow, validateArray } from "./validators.js";
-import { validateExcludes } from "./validators.js";
 
 //ADD A PARAM max correlation that will measure the correlation between variables if defined
 
 export const parseTrainingXY = ({ 
     arrObj = [], //array of objects
     trainingSplit = 0.8, //numberic float between 0.01 and 0.99
-    repeat = {}, //accepted key pair object with number as values
     yCallbackFunc = row => row, //accepted callback functions
     xCallbackFunc = row => row, //accepted callback functions
     validateRows = () => true,//accepted callback functions
-    groups = {},//accepted object of arrays
     shuffle = false,//only booleans
-    minmaxRange = [0, 1],
     balancing = '',//accepted null, "oversample" or "undersample"
     state = {}, //accepted object or classes
-    customMinMaxRanges = {},
-    excludes = [],//each item must be a string
 }) => {
     let X = [];
     let Y = [];
 
     validateArray(arrObj, {min: 5}, 'parseTrainingXY')
     validateFirstRow(arrObj[0])
-    validateExcludes(arrObj[0], excludes)
 
     //if parsedX and parsedY is undefined or null the current row will be excluded from training or production
     for (let x = 0; x < arrObj.length; x++) {
@@ -49,18 +41,20 @@ export const parseTrainingXY = ({
         Y = shuffledY
     }
 
-    const excludesSet = new Set(excludes)
-
-    let {
-        scaledOutput: scaledX, 
-        scaledConfig: configX
-    } = scaleArrayObj({arrObj: X, repeat, groups, minmaxRange, customMinMaxRanges, excludes: excludesSet})
-
-
+    const xLen = X.length
     const yLen = Y.length
+    const flatX = new Array(xLen)
     const flatY = new Array(yLen)
+    const configX = {
+        keyNames: xLen ? Object.keys(X[0]) : []
+    }
     const configY = {
-        keyNames: Object.keys(Y[0])
+        keyNames: yLen ? Object.keys(Y[0]) : []
+    }
+
+    for(let idx = 0; idx < xLen; idx++)
+    {
+        flatX[idx] = Object.values(X[idx])
     }
 
     for(let idx = 0; idx < yLen; idx++)
@@ -68,11 +62,11 @@ export const parseTrainingXY = ({
         flatY[idx] = Object.values(Y[idx])
     }
 
-    const splitIndex = Math.floor(scaledX.length * trainingSplit)
+    const splitIndex = Math.floor(flatX.length * trainingSplit)
 
-    let trainX = scaledX.slice(0, splitIndex)
+    let trainX = flatX.slice(0, splitIndex)
     let trainY = flatY.slice(0, splitIndex)
-    let testX = scaledX.slice(splitIndex)
+    let testX = flatX.slice(splitIndex)
     let testY = flatY.slice(splitIndex)
 
 
@@ -113,21 +107,15 @@ export const parseTrainingXY = ({
 
 export const parseProductionX = ({ 
     arrObj = [], 
-    repeat = {}, 
     xCallbackFunc = row => row,
     validateRows = () => true,
-    groups = {},
     shuffle = false,
-    minmaxRange = [0, 1],
     state = {},
-    customMinMaxRanges,
-    excludes = []
 }) => {
     let X = [];
 
     validateArray(arrObj, {min: 5}, 'parseProductionX')
     validateFirstRow(arrObj[0])
-    validateExcludes(arrObj[0], excludes)
 
     for (let x = 0; x < arrObj.length; x++) {
 
@@ -145,17 +133,20 @@ export const parseProductionX = ({
         X = arrayShuffle(X)
     }
 
+    const xLen = X.length
+    const flatX = new Array(xLen)
+    const configX = {
+        keyNames: xLen ? Object.keys(X[0]) : []
+    }
 
-    // Scale X
-    const {
-        scaledOutput: scaledX, 
-        scaledConfig: configX
-    } = scaleArrayObj({arrObj: X, repeat, groups, minmaxRange, customMinMaxRanges, excludes: new Set(excludes)})
-
+    for(let idx = 0; idx < xLen; idx++)
+    {
+        flatX[idx] = Object.values(X[idx])
+    }
 
     // Split into training and testing sets
     return {
-        X: scaledX,
+        X: flatX,
         configX,
     }
 };

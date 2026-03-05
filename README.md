@@ -1,196 +1,130 @@
-# **xy-scale.js**  
-**Machine Learning Data Preparation Toolkit**  
-*XY Splitting, Feature Weighting, Standardization, and MinMax Scaling in JavaScript*
+# xy-scale.js
 
----
+Machine learning data preparation helpers for JavaScript.
 
 ## Overview
 
-`xy-scale.js` is a robust toolkit designed for scaling and preparing datasets in JavaScript, specifically tailored for machine learning applications. It offers essential utilities for:
+`xy-scale.js` now focuses on turning already-prepared row objects into flat `X` and `Y` arrays for training or production use.
 
-- **Dataset Splitting:** Dividing data into training and testing subsets.
-- **Scaling:** Handling both numerical and categorical data.
-- **Preprocessing:** Preparing time-series data for modeling.
-
-### Key Features
-
-- **Modular Functions:** `parseTrainingXY` and `parseProductionX` allow for flexible handling of features and labels.
-- **Custom Scaling:** Enable custom scaling, feature weighting, and data transformation.
-- **Feature Grouping:** Organize features into meaningful categories for streamlined processing.
-
----
+The library no longer scales values internally. Your `arrObj` input, or the objects returned by your callbacks, should already contain the numeric or boolean values you want to feed into a model.
 
 ## Installation
-
-Install the toolkit via npm:
 
 ```bash
 npm install xy-scale
 ```
 
----
+## Exports
 
-## Main Functions
+```javascript
+import { parseTrainingXY, parseProductionX, arrayToTimesteps } from 'xy-scale';
+```
 
-### 1. `parseTrainingXY`
+## Main functions
 
-Processes a dataset for supervised learning by scaling and splitting it into training and testing subsets. It supports configurable options for feature grouping, weighting, and scaling.
+### parseTrainingXY
 
-**Parameters:**
+Builds supervised-learning datasets and splits them into training and testing arrays.
 
-- `arrObj` (Array of Objects): Input data containing features (X) and labels (Y) e.g, `[{high: 10, low: 8, close: 9, dayOfTheWeek: 'monday'}, {high: 11, low: 8, close: 10, dayOfTheWeek: 'tuesday'}]`. Each Item an be a `number`, `string` or `boolean`.
-- `trainingSplit` (Number, optional): Fraction of data for training (default: `0.8`).
-- `yCallbackFunc` (Function): Extracts Y values from each row. Returns `null` or `undefined` to exclude a row.
-- `xCallbackFunc` (Function): Extracts X values from each row. Returns `null` or `undefined` to exclude a row.
-- `groups` (Object, optional): Groups continuous values features into categories after `yCallbackFunc` and `xCallbackFunc` callbacks are applied (e.g., `{ ohlc: ['open', 'high', 'low', 'close'] }`). Each feature belonging to a group will be MinMax scaled or standardized using the group's properties (`min`, `max`, `std`).
-- `shuffle` (Boolean, optional): Randomizes data order after `yCallbackFunc` and `xCallbackFunc` callbacks are applied (default: `false`).
-- `repeat` (Object, optional): Determines feature repetition after `yCallbackFunc` and `xCallbackFunc` callbacks are applied.
-- `balancing` (String, optional): Handles inbalanced datasets applying `oversample` or `undersample` to `X` and `Y` (defaults to `null`);
+#### Parameters
 
-**Returns:**
+- `arrObj` (Array<Object>): Source dataset.
+- `trainingSplit` (Number, optional): Fraction of rows used for training. Default: `0.8`.
+- `yCallbackFunc` (Function, optional): Builds the output object for each row. Returning `null` or `undefined` skips the row.
+- `xCallbackFunc` (Function, optional): Builds the feature object for each row. Returning `null` or `undefined` skips the row.
+- `validateRows` (Function, optional): Extra row filter executed before the callbacks.
+- `shuffle` (Boolean, optional): Shuffles `X` and `Y` together before splitting. Default: `false`.
+- `balancing` (String, optional): Accepts `oversample` or `undersample`.
+- `state` (Object, optional): Shared mutable state passed into callbacks.
 
-- `trainX`, `trainY`: Scaled training features and labels.
-- `testX`, `testY`: Scaled testing features and labels.
-- `configX`, `configY`: Scaling configuration objects for features and labels.
-- `keyNamesX`, `keyNamesY`: Key names reflecting feature repetition and grouping.
+#### Returns
 
----
+- `trainX`, `trainY`
+- `testX`, `testY`
+- `configX`: `{ keyNames: [...] }`
+- `configY`: `{ keyNames: [...] }`
 
-### 2. `parseProductionX`
+`configX.keyNames` and `configY.keyNames` preserve the object-key order used when flattening each callback result into an array.
 
-Parses and scales unseen production data for feature preparation.
+### parseProductionX
 
-**Parameters:**
+Builds production-ready feature arrays from already-prepared rows.
 
-- `arrObj` (Array of Objects): Input data containing features (X) and labels (Y) e.g, `[{high: 10, low: 8, close: 9, dayOfTheWeek: 'monday'}, {high: 11, low: 8, close: 10, dayOfTheWeek: 'tuesday'}]`. Each Item an be a `number`, `string` or `boolean`.
-- `repeat` (Object, optional): Determines feature repetition after `yCallbackFunc` and `xCallbackFunc` callbacks are applied.
-- `xCallbackFunc` (Function): Extracts X values from each row. Returns `null` or `undefined` to exclude a row.
-- `groups` (Object, optional): Groups continuous values features into categories after `yCallbackFunc` and `xCallbackFunc` callbacks are applied (e.g., `{ ohlc: ['open', 'high', 'low', 'close'] }`). Each feature belonging to a group will be MinMax scaled or standardized using the group's properties (`min`, `max`, `std`).
-- `shuffle` (Boolean, optional): Randomizes data order after `yCallbackFunc` and `xCallbackFunc` callbacks are applied (default: `false`).
+#### Parameters
 
-**Returns:**
+- `arrObj` (Array<Object>): Source dataset.
+- `xCallbackFunc` (Function, optional): Builds the feature object for each row. Returning `null`, `undefined`, or `false` skips the row.
+- `validateRows` (Function, optional): Extra row filter executed before the callback.
+- `shuffle` (Boolean, optional): Shuffles the final `X` rows. Default: `false`.
+- `state` (Object, optional): Shared mutable state passed into the callback.
 
-- `X`: Scaled feature array.
-- `configX`: Scaling configuration for features.
-- `keyNamesX`: Key names reflecting feature repetition and grouping.
+#### Returns
 
----
+- `X`
+- `configX`: `{ keyNames: [...] }`
 
-### 3. `descaleArrayObj`
+### arrayToTimesteps
 
-Reconstructs original data values from scaled arrays.
+Converts a flat array into overlapping sequences for time-series models.
 
-**Parameters:**
-
-- `scaled` (Array): Scaled data array (e.g., `trainX`, `trainY`, etc.).
-- `config` (Object): Configuration object returned from `parseTrainingXY` or `parseProductionX`.
-- `keyNames` (Array): Key names reflecting feature repetition and grouping.
-
-**Returns:**
-
-- An array of objects resembling the original input data structure.
-
----
-
-### 4. `arrayToTimesteps`
-
-Converts a flat array into sequences for time-series modeling.
-
-**Parameters:**
+#### Parameters
 
 - `arr` (Array): Input array.
 - `timeSteps` (Number): Length of each sequence.
   - If `timeSteps === 0`, returns the original array.
   - If `timeSteps < 0`, throws an error.
 
-**Returns:**
+#### Returns
 
 - An array of overlapping sub-arrays, each containing `timeSteps` elements.
 
----
-
-## Usage Example
+## Usage example
 
 ```javascript
-import { parseTrainingXY, parseProductionX, descaleArrayObj, arrayToTimesteps } from 'xy-scale';
-import { loadFile } from './fs.js';
+import { parseTrainingXY, arrayToTimesteps } from 'xy-scale';
 import * as tf from '@tensorflow/tfjs-node';
 
-(async () => {
-    const myArray = await loadFile({ fileName: '1d-spy.json', pathName: 'datasets' });
+const candles = [
+  { closeScaled: 0.41, volumeScaled: 0.22, targetUp: 1 },
+  { closeScaled: 0.45, volumeScaled: 0.25, targetUp: 0 },
+  { closeScaled: 0.48, volumeScaled: 0.28, targetUp: 1 },
+  { closeScaled: 0.51, volumeScaled: 0.31, targetUp: 1 },
+  { closeScaled: 0.49, volumeScaled: 0.27, targetUp: 0 },
+  { closeScaled: 0.54, volumeScaled: 0.35, targetUp: 1 },
+];
 
-    // Callback function for parsing `X` features
-    const xCallbackFunc = ({ objRow, index }) => {
-        const curr = objRow[index];
-        const prev = objRow[index - 1];
-        if (typeof prev === 'undefined') return null;
+const { trainX, trainY, testX, testY, configX, configY } = parseTrainingXY({
+  arrObj: candles,
+  trainingSplit: 0.8,
+  shuffle: true,
+  xCallbackFunc: ({ objRow, index }) => ({
+    close: objRow[index].closeScaled,
+    volume: objRow[index].volumeScaled,
+  }),
+  yCallbackFunc: ({ objRow, index }) => ({
+    target: objRow[index].targetUp,
+  }),
+});
 
-        const { open, high, low, close, volume } = curr;
-        return {
-            open,
-            high,
-            low,
-            close,
-            change: open - prev.close,
-            top: high - Math.max(open, close),
-            bottom: low - Math.min(open, close),
-            body: open - close,
-        };
-    };
+const timeSteps = 3;
+const timeSteppedTrainX = arrayToTimesteps(trainX, timeSteps);
+const trimmedTrainY = trainY.slice(timeSteps - 1);
 
-    // Callback function for parsing `Y` labels
-    const yCallbackFunc = ({ objRow, index }) => {
-        const curr = objRow[index];
-        const next = objRow[index + 1];
-        if (typeof next === 'undefined') return null;
+const inputX = tf.tensor3d(timeSteppedTrainX, [timeSteppedTrainX.length, timeSteps, trainX[0].length]);
+const targetY = tf.tensor2d(trimmedTrainY, [trimmedTrainY.length, trainY[0].length]);
 
-        return {
-            label_1: next.open > curr.close,
-            label_2: next.close > curr.close,
-        };
-    };
-
-    // Parse and scale training data
-    const {
-        trainX,
-        trainY,
-        testX,
-        testY,
-        configX,
-        keyNamesX,
-    } = parseTrainingXY({
-        arrObj: myArray,
-        trainingSplit: 0.9,
-        yCallbackFunc,
-        xCallbackFunc,
-        groups: { ohlc: ['open', 'high', 'low', 'close'] },
-        shuffle: true,
-        repeat: { close: 20 },
-        balancing: null, //oversample or undersample
-    });
-
-    // Time-stepping and TensorFlow integration
-    const timeSteps = 10;
-    const timeSteppedTrainX = arrayToTimesteps(trainX, timeSteps);
-    const trimmedTrainY = trainY.slice(timeSteps - 1);
-
-    const inputX = tf.tensor3d(timeSteppedTrainX, [timeSteppedTrainX.length, timeSteps, trainX[0].length]);
-    const targetY = tf.tensor2d(trimmedTrainY, [trimmedTrainY.length, trainY[0].length]);
-
-    console.log('configX', configX);
-    console.log('inputX', inputX);
-    console.log('targetY', targetY);
-})();
+console.log(configX.keyNames);
+console.log(configY.keyNames);
+console.log(testX, testY);
+console.log(inputX, targetY);
 ```
 
----
+## Notes
 
-## Additional Information
-
-For more detailed documentation, examples, and support, please visit the [GitHub repository](https://github.com/jaimelias/xy-scale).
-
----
+- `parseTrainingXY` and `parseProductionX` do not scale values.
+- If you need scaling, do it before passing data into this library.
+- Callback return objects are flattened with `Object.values(...)`, using the same key order stored in `configX.keyNames` and `configY.keyNames`.
 
 ## License
 
-This project is licensed under the [MIT License](LICENSE).
+This project is licensed under the MIT License.

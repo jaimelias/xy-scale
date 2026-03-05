@@ -1,37 +1,34 @@
 import OHLCV_INDICATORS from 'ohlcv-indicators'
-import KNN from 'ml-knn'
-import { ConfusionMatrix } from 'ml-confusion-matrix';
-
 import { parseTrainingXY } from "../src/datasets.js"
-import {arrayToTimesteps} from '../src/timeSteps.js'
 import { loadFile } from "./fs.js"
-import * as tf from '@tensorflow/tfjs-node'
 
 const test = async () => {
 
-    const ohlcv = (await loadFile({fileName: 'btc-1d.json', pathName: 'datasets'}))
+    const input = (await loadFile({fileName: 'btc-1d.json', pathName: 'datasets'}))
 
-    const indicators = new OHLCV_INDICATORS({input: ohlcv, ticker: 'BTC', precision: false})
+    const indicators = new OHLCV_INDICATORS({input, precision: false})
+
+    const weights5 = {
+      ret_gap: [2, 2, 1.75, 1.5],
+      ret_change: [2, 2, 1.75, 1.5]
+    }
+
+    const weights3 = {
+      ret_ema_5: [1.5, 1.5, 1.2],
+      ret_sma_200: [1.5, 1.5, 1.2], 
+      ret_atr_14_upper: [1.5, 1.5, 1.2], 
+    }
 
     indicators
-        .rsi(14)
-        .bollingerBands(20, 2)
-        .ema(50)
-        .sma(200)
-        .sma(300)
-        .scaler(200, ['open', 'high', 'low', 'close'], {group: true})
-        .crossPairs([
-            {fast: 'rsi_14', slow: 30},
-            {fast: 'price', slow: 'sma_200'},
-            {fast: 'price', slow: 'sma_300'},
-            {fast: 'price', slow: 'bollinger_bands_upper'}
-        ])
+      .volumeDelta()
+      .atr(14, {upper: 1})
+      .ema(5)
+      .sma(200)
+      .priceFeatures({colKeys: ['ema_5', 'sma_200', 'atr_14_upper']})
+      .scaler('zscore', 5, {group: true, lag: true, colKeys: ['ret_change', 'ret_upper_wick', 'ret_lower_wick', 'ret_gap', 'ret_body', 'ret_range'], weights: weights5})
+      .scaler('zscore', 3, {group: true, lag: true, colKeys: ['ret_change', 'ret_ema_5', 'ret_sma_200', 'ret_atr_14_upper'], weights: weights3})
 
-    const parsedOhlcv = indicators.getData({dateFormat: 'milliseconds'})
-
-    //console.log(parsedOhlcv.slice(-1))
-
-    const {scaledGroups} = indicators
+    const arrObj = indicators.getData()
 
     const {
         trainX,
@@ -39,159 +36,57 @@ const test = async () => {
         testX,
         testY,
         configX,
-        keyNamesX,
     } = parseTrainingXY({
-        arrObj: parsedOhlcv,
+        arrObj,
         trainingSplit: 0.50,
         yCallbackFunc,
         xCallbackFunc,
         validateRows: ({objRow, index}) => {
+
             const curr = objRow[index]
             const prev = objRow[index - 1]
 
-            if(typeof prev === 'undefined') return false
+            if(typeof prev === 'undefined') return false //return false or null or undefined to continue to skip this row
 
-            return curr.ema_50 > curr.sma_300 && curr.sma_200 > curr.sma_300 && (curr.price_x_sma_300 === -1 || curr.price_x_sma_300 === 1)
+            if(!Number.isNaN(curr.sma_200) && !Number.isNaN(prev.sma_200)  && curr.sma_200 > prev.sma_200) return true //return true to include this row in dataset
+
+            return false
         },
         shuffle: true,
-        minmaxRange: [0, 1],
         balancing: null,
-        groups: scaledGroups,
-        excludes: ['high'],
-        repeat: {
-            high2: 100
-        }
     });
 
-    console.log(configX.outputKeyNames)
-    console.log(configX.inputTypes)
-    //console.log(configX)
+    console.log(configX.keyNames)
+    console.log('row_1', {features: trainX[0], labels: trainY[0]})
 
-    console.log('trainX', [trainX[0], trainX.at(-1)])
-
-
-
-/* 
-    tensorflowExample({
-        trainX,
-        trainY,
-        testX,
-        testY,
-        configX,
-        keyNamesX,
-    })
-
-    classifiersExample({
-        trainX,
-        trainY,
-        testX,
-        testY,
-        configX,
-        keyNamesX,
-    })
- */
- 
+    console.log(trainY.length, trainX.length)
 }
 
-const classifiersExample = ({
-    trainX,
-    trainY,
-    testX,
-    testY,
-    configX,
-    keyNamesX,
-}) => {
-    const model = new KNN(trainX, trainY)
-
-    const predictions = model.predict(testX)
-    const compare = ConfusionMatrix.fromLabels(testY.flat(), predictions.flat())
-
-    //console.log(testY.flat(), predictions.flat())
-
-    console.log(compare.getAccuracy())
-}
-
-const tensorflowExample = ({
-    trainX,
-    trainY,
-    testX,
-    testY,
-    configX,
-    keyNamesX,
-}) => {
-
-    const timeSteps = 10
-    const colsX = trainX[0].length
-    const colsY = trainY[0].length
-    const timeSteppedTrainX = arrayToTimesteps(trainX, timeSteps)
-    const trimedTrainY = trainY.slice(timeSteps-1)
-
-    const inputX = tf.tensor3d(timeSteppedTrainX, [timeSteppedTrainX.length, timeSteps, colsX])
-    const targetY = tf.tensor2d(trimedTrainY,  [trimedTrainY.length, colsY])
-
-    //console.log('trainX', trainX)
-    //console.log('configX', configX)
-    //console.log('inputX', inputX)
-    //console.log('inputX', targetY)   
-
-}
-
-//callback function used to prepare X before scaling
+//callback function used to prepare X before flattening
 const xCallbackFunc = ({ objRow, index }) => {
     const curr = objRow[index]
-    const prev = objRow[index - 1]
 
-    //returning null or undefined will exclude current row X and Y from training
-    if(typeof prev === 'undefined') return null
+    const output = {}
 
-    //console.log(((curr.sma_300 - curr.low) / curr.low) * 100)
-
-    const output = {
-        high: curr.high,
-        ema50IsUp: curr.ema_50 > prev.ema_50,
-        ema50GtSma200: curr.ema_50 > curr.sma_200,
-        ema50GtSma300: curr.ema_50 > curr.sma_300,
-        sma200IsUp: curr.sma_200 > prev.sma_200,
-        sma200GtSma300: curr.sma_200 > prev.sma_300,
-        sma_300IsUp: curr.sma_300 > prev.sma_300,
-        rsi_14: curr.rsi_14,
-        rsi_sma_14: curr.rsi_sma_14,
-    }
-
-    for(const [key, value]  of Object.entries(curr))
-    {
-        if(key.includes('minmax'))
-        {
-            output[key] = value
+    for(const [k, v] of Object.entries(curr)) {
+        if(k.startsWith('zscore_')) {
+            output[k] = v
         }
     }
 
-    return output
+    return output //returning null or undefined will exclude current row X and Y from training
 }
 
-//callback function used to prepare Y before scaling
+//callback function used to prepare Y before flattening
 const yCallbackFunc = ({ objRow, index }) => {
-    const curr = objRow[index]
-    const next = new Array(60).fill(0).map((_, i) => objRow[index + 1 + i])
+
+    const next = objRow[index + 1]
 
     //returning null or undefined will exclude current row X and Y from training
-    if (next.some(o => typeof o === 'undefined')) return null;
-
-    const priceTp = curr.sma_300 * 1.3
-    const entryPrice = curr.sma_300 * 0.96
-    const tp = next.some(o => o.close > entryPrice && (o.high > priceTp))
-    const sl = next.some(o => (o.low - entryPrice)/entryPrice < -0.10 && o.low < entryPrice)
-
-    const highestHigh = Math.max(...next.map(o => o.high))
-    const lowestLow = Math.min(...next.slice(0, 5).map(o => o.low))
-
-
-    if(lowestLow > entryPrice) return null
-
-    //console.log([curr.date, (lowestLow - entryPrice)/entryPrice])
+    if (typeof next === 'undefined') return null
     
     return {
-        result: Number(tp === true && sl === false)
+        result: Number(next.close > next.open)
     }
 }
 
