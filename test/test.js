@@ -1,5 +1,6 @@
 import OHLCV_INDICATORS from 'ohlcv-indicators'
 import { parseTrainingXY } from "../src/datasets.js"
+import { arrayToTimesteps } from '../src/timeSteps.js'
 import { loadFile } from "./fs.js"
 
 const test = async () => {
@@ -60,6 +61,12 @@ const test = async () => {
     console.log('row_1', {features: trainX[0], labels: trainY[0]})
 
     console.log(trainY.length, trainX.length)
+
+    const timeSteps = arrayToTimesteps(trainX, 10)
+
+    const typeArr = (a) => Array.isArray(a) ? 'array' : typeof a
+
+    console.log(`timeSteps: ${typeArr(timeSteps)} => ${typeArr(timeSteps[0])} => ${typeArr(timeSteps[0][0][0])}`)
 }
 
 //callback function used to prepare X before flattening
