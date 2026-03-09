@@ -388,6 +388,7 @@ export const parseTrainingXY = ({
 export const parseProductionX = ({
     arrObj = [],
     xCallbackFunc = row => row,
+    yCallbackFunc = null,
     validateRows = () => true,
     shuffle = false,
     strictXSchema = true,
@@ -398,6 +399,10 @@ export const parseProductionX = ({
 
     validateArray(arrObj, { min: 5 }, 'parseProductionX');
     validateFirstRow(arrObj[0]);
+
+    if(yCallbackFunc != null) {
+        throw new Error('The property "yCallbackFunc" must not be set in "parseProductionX".')
+    }
 
     for (let x = 0; x < arrObj.length; x++) {
         if (!validateRows({ objRow: arrObj, index: x, state })) continue;
