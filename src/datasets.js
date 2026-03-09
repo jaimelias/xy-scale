@@ -316,9 +316,7 @@ export const parseTrainingXY = ({
         keyNames: xKeys,
     };
 
-    const configY = {
-        keyNames: yKeys,
-    };
+
 
     for (let idx = 0; idx < xLen; idx++) {
         const rowObj = X[idx];
@@ -341,12 +339,33 @@ export const parseTrainingXY = ({
         flatX[idx] = flatRow;
     }
 
+    const toLabelKey = value => Array.isArray(value)
+        ? JSON.stringify(value) 
+        : String(value);
+
+    const initLabelCounts = keyNames =>
+        Object.fromEntries(
+            keyNames.map(keyName => [keyName, ({})])
+        );
+
+    const configY = {
+        keyNames: yKeys,
+        labelCounts: initLabelCounts(yKeys),
+    };
+
     for (let idx = 0; idx < yLen; idx++) {
         const rowObj = Y[idx];
         const flatRow = new Array(yKeys.length);
 
         for (let j = 0; j < yKeys.length; j++) {
-            flatRow[j] = rowObj[yKeys[j]];
+            const keyName = yKeys[j];
+            const value = rowObj[keyName];
+
+            flatRow[j] = value;
+
+            const labelKey = toLabelKey(value);
+            configY.labelCounts[keyName][labelKey] =
+                (configY.labelCounts[keyName][labelKey] ?? 0) + 1;
         }
 
         flatY[idx] = flatRow;

@@ -37,6 +37,7 @@ const test = async () => {
         testX,
         testY,
         configX,
+        configY
     } = parseTrainingXY({
         arrObj,
         trainingSplit: 0.50,
@@ -61,6 +62,7 @@ const test = async () => {
     console.log('row_1', {features: trainX[0], labels: trainY[0]})
 
     console.log(trainY.length, trainX.length)
+    console.log(configY)
 
     const timeSteps = arrayToTimesteps(trainX, 10)
 
@@ -87,13 +89,15 @@ const xCallbackFunc = ({ objRow, index }) => {
 //callback function used to prepare Y before flattening
 const yCallbackFunc = ({ objRow, index }) => {
 
+    const curr = objRow[index]
     const next = objRow[index + 1]
 
     //returning null or undefined will exclude current row X and Y from training
     if (typeof next === 'undefined') return null
     
     return {
-        result: Number(next.close > next.open) //the output shoud must be an array to preserve the key->value order
+        label_1: Number(next.close > next.open),
+        label_2: Number(next.close > curr.close)
     }
 }
 
