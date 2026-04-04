@@ -243,7 +243,7 @@ export const parseTrainingXY = ({
     let Y = [];
     const sourceIndexes = [];
 
-    validateArray(arrObj, { min: 5 }, 'parseTrainingXY');
+    validateArray(arrObj, { min: 2 }, 'parseTrainingXY');
     validateFirstRow(arrObj[0]);
 
     for (let x = 0; x < arrObj.length; x++) {
@@ -416,7 +416,7 @@ export const parseProductionX = ({
     let X = [];
     let sourceIndexes = [];
 
-    validateArray(arrObj, { min: 5 }, 'parseProductionX');
+    validateArray(arrObj, { min: 1 }, 'parseProductionX');
     validateFirstRow(arrObj[0]);
 
     if(yCallbackFunc != null) {

@@ -23,7 +23,7 @@ export const validateArray = (arr, {min = -Infinity, max = Infinity}, paramName)
 
     if(arr.length < min)
     {
-        throw new Error(`Invalid property value. Array "${paramName}" expected at least ${max} items.`)
+        throw new Error(`Invalid property value. Array "${paramName}" expected at least ${min} items.`)
     }
     if(arr.length > max)
     {
