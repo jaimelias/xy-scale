@@ -247,20 +247,26 @@ export const parseTrainingXY = ({
     validateFirstRow(arrObj[0]);
 
     for (let x = 0; x < arrObj.length; x++) {
-        if (!validateRows({ objRow: arrObj, index: x, state })) continue;
 
-        const parsedX = xCallbackFunc({ objRow: arrObj, index: x, state });
-        const parsedY = yCallbackFunc({ objRow: arrObj, index: x, state });
+        try {
+            if (!validateRows({ objRow: arrObj, index: x, state })) continue;
 
-        if (
-            typeof parsedX !== 'undefined' &&
-            parsedX !== null &&
-            typeof parsedY !== 'undefined' &&
-            parsedY !== null
-        ) {
-            X.push(parsedX);
-            Y.push(parsedY);
-            sourceIndexes.push(x);
+            const parsedX = xCallbackFunc({ objRow: arrObj, index: x, state });
+            const parsedY = yCallbackFunc({ objRow: arrObj, index: x, state });
+
+            if (
+                typeof parsedX !== 'undefined' &&
+                parsedX !== null &&
+                typeof parsedY !== 'undefined' &&
+                parsedY !== null
+            ) {
+                X.push(parsedX);
+                Y.push(parsedY);
+                sourceIndexes.push(x);
+            }
+        } catch(err) {
+            console.error(`[BUG] - Skipped row index=${x}: ${err.message}`)
+            continue
         }
     }
 
@@ -424,13 +430,19 @@ export const parseProductionX = ({
     }
 
     for (let x = 0; x < arrObj.length; x++) {
-        if (!validateRows({ objRow: arrObj, index: x, state })) continue;
 
-        const parsedX = xCallbackFunc({ objRow: arrObj, index: x, state });
+        try {
+            if (!validateRows({ objRow: arrObj, index: x, state })) continue;
 
-        if (typeof parsedX !== 'undefined' && parsedX !== null && parsedX !== false) {
-            X.push(parsedX);
-            sourceIndexes.push(x);
+            const parsedX = xCallbackFunc({ objRow: arrObj, index: x, state });
+
+            if (typeof parsedX !== 'undefined' && parsedX !== null && parsedX !== false) {
+                X.push(parsedX);
+                sourceIndexes.push(x);
+            }
+        }  catch(err) {
+            console.error(`[BUG] - Skipped row index=${x}: ${err.message}`)
+            continue
         }
     }
 
