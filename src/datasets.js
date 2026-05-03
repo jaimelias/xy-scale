@@ -48,23 +48,23 @@ export const parseTrainingXY = ({
                 }
             }
 
-            const rowX = new Array(keyNamesX.length);
-            const rowY = new Array(keyNamesY.length);
+            const xLen = keyNamesX.length;
+            const yLen = keyNamesY.length;
 
-            for (let i = 0; i < keyNamesX.length; i++) {
+            const rowX = new Array(xLen);
+            const rowY = new Array(yLen);
+
+            for (let i = 0; i < xLen; i++) {
                 const key = keyNamesX[i];
-                const value = parsedX[key];
-
-                rowX[i] = value;
+                rowX[i] = parsedX[key];
             }
 
-            for (let i = 0; i < keyNamesY.length; i++) {
+            for (let i = 0; i < yLen; i++) {
                 const key = keyNamesY[i];
                 const value = parsedY[key];
 
                 rowY[i] = value;
 
-                //labels can be arrays, booleans, numbers or strings
                 const labelKey = Array.isArray(value)
                     ? JSON.stringify(value)
                     : String(value);
@@ -74,6 +74,7 @@ export const parseTrainingXY = ({
 
             flatX.push(rowX);
             flatY.push(rowY);
+
         } catch(err) {
             throw new Error(`[BUG] - Skipped row index=${x}: ${err.message}`);
         }
@@ -172,16 +173,15 @@ export const parseProductionX = ({
             }
 
             if (keyNamesX === null) {
-                keyNamesX = Object.keys(parsedX)
+                keyNamesX = Object.keys(parsedX);
             }
 
-            const rowX = new Array(keyNamesX.length);
+            const xLen = keyNamesX.length;
+            const rowX = new Array(xLen);
 
-            for (let i = 0; i < keyNamesX.length; i++) {
+            for (let i = 0; i < xLen; i++) {
                 const key = keyNamesX[i];
-                const value = parsedX[key];
-
-                rowX[i] = value;
+                rowX[i] = parsedX[key];
             }
 
             flatX.push(rowX);
@@ -191,7 +191,7 @@ export const parseProductionX = ({
     }
 
     if (shuffle) {
-         flatX = arrayShuffle(flatX)
+         flatX = arrayShuffle(flatX);
     }
 
     const configX = {
