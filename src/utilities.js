@@ -1,4 +1,3 @@
-export const isBadNumber = (v) => v == null || !Number.isFinite(v)
 
 export const arrayShuffle = X => {
     // Make a copy of the array to avoid mutating the original
