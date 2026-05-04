@@ -1,5 +1,4 @@
 import { arrayShuffle } from "./utilities.js";
-import { oversampleXY, undersampleXY } from "./balancing.js";
 import { validateFirstRow, validateArray, hasInvalidNumbers } from "./validators.js";
 
 export const parseTrainingXY = ({
@@ -9,7 +8,6 @@ export const parseTrainingXY = ({
     xCallbackFunc = row => row,
     validateRows = () => true,
     shuffle = false,
-    balancing = '',
     state = {},
 }) => {
     validateArray(arrObj, { min: 2 }, 'parseTrainingXY');
@@ -17,6 +15,8 @@ export const parseTrainingXY = ({
 
     let flatX = [];
     let flatY = [];
+    let source = [];
+
 
     let keyNamesX = null;
     let keyNamesY = null;
@@ -26,6 +26,7 @@ export const parseTrainingXY = ({
     for (let x = 0; x < arrObj.length; x++) {
         try {
             if (!validateRows({ objRow: arrObj, index: x, state })) continue;
+
 
             const parsedX = xCallbackFunc({ objRow: arrObj, index: x, state });
             const parsedY = yCallbackFunc({ objRow: arrObj, index: x, state });
@@ -74,6 +75,7 @@ export const parseTrainingXY = ({
 
             flatX.push(rowX);
             flatY.push(rowY);
+            source.push(arrObj[x])
 
         } catch(err) {
             throw new Error(`[BUG] - Skipped row index=${x}: ${err.message}`);
@@ -86,7 +88,8 @@ export const parseTrainingXY = ({
         for (let i = 0; i < flatX.length; i++) {
             merged[i] = {
                 x: flatX[i],
-                y: flatY[i]
+                y: flatY[i],
+                source: source[i]
             };
         }
 
@@ -94,10 +97,12 @@ export const parseTrainingXY = ({
 
         flatX = new Array(shuffled.length);
         flatY = new Array(shuffled.length);
+        source = new Array(shuffled.length)
 
         for (let i = 0; i < shuffled.length; i++) {
             flatX[i] = shuffled[i].x;
             flatY[i] = shuffled[i].y;
+            source[i] = shuffled[i].source
         }
     }
 
@@ -116,22 +121,8 @@ export const parseTrainingXY = ({
     let trainY = flatY.slice(0, splitIndex);
     let testX = flatX.slice(splitIndex);
     let testY = flatY.slice(splitIndex);
-
-    if (balancing) {
-        let balance;
-
-        if (balancing === 'oversample') {
-            balance = oversampleXY(trainX, trainY);
-            trainX = balance.X;
-            trainY = balance.Y;
-        } else if (balancing === 'undersample') {
-            balance = undersampleXY(trainX, trainY);
-            trainX = balance.X;
-            trainY = balance.Y;
-        } else {
-            throw Error('balancing argument only accepts "", "oversample" and "undersample". Defaults to "".');
-        }
-    }
+    let trainSource = source.slice(0, splitIndex);
+    let testSource = source.slice(splitIndex);
 
     return {
         trainX,
@@ -140,6 +131,8 @@ export const parseTrainingXY = ({
         testY,
         configX,
         configY,
+        trainSource,
+        testSource
     };
 };
 export const parseProductionX = ({
@@ -151,6 +144,7 @@ export const parseProductionX = ({
     state = {},
 }) => {
     let flatX = [];
+    let source = [];
     let keyNamesX = null;
 
     validateArray(arrObj, { min: 1 }, 'parseProductionX');
@@ -185,13 +179,32 @@ export const parseProductionX = ({
             }
 
             flatX.push(rowX);
+            source.push(arrObj[x])
+
         } catch(err) {
             throw new Error(`[BUG] - Skipped row index=${x}: ${err.message}`);
         }
     }
 
     if (shuffle) {
-         flatX = arrayShuffle(flatX);
+        const merged = new Array(flatX.length);
+
+        for (let i = 0; i < flatX.length; i++) {
+            merged[i] = {
+                x: flatX[i],
+                source: source[i]
+            };
+        }
+
+        const shuffled = arrayShuffle(merged);
+
+        flatX = new Array(shuffled.length);
+        source = new Array(shuffled.length)
+
+        for (let i = 0; i < shuffled.length; i++) {
+            flatX[i] = shuffled[i].x;
+            source[i] = shuffled[i].source
+        }
     }
 
     const configX = {
@@ -200,6 +213,7 @@ export const parseProductionX = ({
 
     return {
         X: flatX,
+        source,
         configX,
     };
 };
