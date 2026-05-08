@@ -1,7 +1,7 @@
 
 export const isNumber = v => v != null && Number.isFinite(v)
 
-export const isPositiveInteger = value =>  Number.isInteger(value) && value > 0
+export const isPositiveInteger = value =>  Number.isInteger(value) && value >= 0
 
 export const isKeyPairObject = param => {
   return (
@@ -138,7 +138,7 @@ export const arraysAreNotEqualSize = (list, callerName) => {
 
 export const validateSizes = ({arrObjSize, trainSize, testSize}) => {
 
-    if(!isPositiveInteger(trainSize)) {
+    if(!isPositiveInteger(trainSize) || trainSize === 0) {
         throw new Error(`Invalid property: "trainSize" (${trainSize}) must be a non-negative integer.`)
     }
     if(!isPositiveInteger(testSize)) {
