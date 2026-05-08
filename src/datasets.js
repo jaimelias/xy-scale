@@ -1,5 +1,6 @@
 import { arrayShuffle } from "./utilities.js";
 import { validateFirstRow, validateArray, hasInvalidNumbers, validateSizes } from "./validators.js";
+import {zscore2d} from './zscore2.js'
 
 export const parseTrainingXY = ({
     arrObj = [],
@@ -10,7 +11,8 @@ export const parseTrainingXY = ({
     validateRows = () => true,
     shuffle = false,
     state = {},
-    showSource = false
+    showSource = false,
+    scaling = null
 }) => {
     validateArray(arrObj, { min: 2 }, 'parseTrainingXY');
     validateFirstRow(arrObj[0]);
@@ -18,6 +20,10 @@ export const parseTrainingXY = ({
     const arrObjSize = arrObj.length;
     
     validateSizes({arrObjSize, trainSize, testSize});
+
+    if(![null, 'zscore'].includes(scaling)) {
+        throw new Error(`Invalid "scaling" property. Accepting null or "zscore".`)
+    }
 
     const totalSize = trainSize + testSize;
     let flatX = [];
@@ -142,10 +148,25 @@ export const parseTrainingXY = ({
 
     let trainX = flatX.slice(0, trainSize);
     let trainY = flatY.slice(0, trainSize);
+    
+    let stats = null
 
+    if(scaling === 'zscore') {
+        let trainNormalized = zscore2d(trainX)
+        stats = trainNormalized.stats
+        trainX = trainNormalized.data
+        trainNormalized = null
+    }
 
     let testX = flatX.slice(-testSize);
+
+    if(scaling === 'zscore') {
+        testX = zscore2d(testX, stats).data
+    }
+
     let testY = flatY.slice(-testSize);
+
+
     flatX = null
     flatY = null
 
@@ -167,7 +188,8 @@ export const parseTrainingXY = ({
         configX,
         configY,
         trainSource,
-        testSource
+        testSource,
+        stats
     }
 };
 export const parseProductionX = ({
@@ -177,7 +199,9 @@ export const parseProductionX = ({
     validateRows = () => true,
     shuffle = false,
     state = {},
-    showSource = false
+    showSource = false,
+    scaling = null,
+    stats
 }) => {
     let flatX = [];
     let source = [];
@@ -185,6 +209,10 @@ export const parseProductionX = ({
 
     validateArray(arrObj, { min: 1 }, 'parseProductionX');
     validateFirstRow(arrObj[0]);
+
+    if(![null, 'zscore'].includes(scaling)) {
+        throw new Error(`Invalid "scaling" property. Accepting null or "zscore".`)
+    }
 
     const arrObjSize = arrObj.length
 
@@ -262,6 +290,10 @@ export const parseProductionX = ({
     const configX = {
         keyNames: keyNamesX ?? [],
     };
+
+    if(scaling === 'zscore') {
+        flatX = zscore2d(flatX, stats).data
+    }
 
     return {
         X: flatX,

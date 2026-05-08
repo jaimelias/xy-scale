@@ -42,6 +42,7 @@ const test = async () => {
         configX,
         configY
     } = parseTrainingXY({
+        scaling: 'zscore',
         arrObj,
         trainSize,
         testSize,
