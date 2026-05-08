@@ -1,22 +1,28 @@
 import { arrayShuffle } from "./utilities.js";
-import { validateFirstRow, validateArray, hasInvalidNumbers } from "./validators.js";
+import { validateFirstRow, validateArray, hasInvalidNumbers, validateSizes } from "./validators.js";
 
 export const parseTrainingXY = ({
     arrObj = [],
-    trainingSplit = 0.8,
+    trainSize = null,
+    testSize = null,
     yCallbackFunc = row => row,
     xCallbackFunc = row => row,
     validateRows = () => true,
     shuffle = false,
     state = {},
+    showSource = false
 }) => {
     validateArray(arrObj, { min: 2 }, 'parseTrainingXY');
     validateFirstRow(arrObj[0]);
 
+    const arrObjSize = arrObj.length;
+    
+    validateSizes({arrObjSize, trainSize, testSize});
+
+    const totalSize = trainSize + testSize;
     let flatX = [];
     let flatY = [];
     let source = [];
-
 
     let keyNamesX = null;
     let keyNamesY = null;
@@ -75,7 +81,11 @@ export const parseTrainingXY = ({
 
             flatX.push(rowX);
             flatY.push(rowY);
-            source.push(arrObj[x])
+
+            if(showSource) {
+                source.push(arrObj[x])
+            }
+            
 
         } catch(err) {
             throw new Error(`[BUG] - Skipped row index=${x}: ${err.message}`);
@@ -88,21 +98,31 @@ export const parseTrainingXY = ({
         for (let i = 0; i < flatX.length; i++) {
             merged[i] = {
                 x: flatX[i],
-                y: flatY[i],
-                source: source[i]
+                y: flatY[i]
             };
+
+            if(showSource) {
+                merged[i].source = source[i]
+            }
         }
 
         const shuffled = arrayShuffle(merged);
 
         flatX = new Array(shuffled.length);
         flatY = new Array(shuffled.length);
-        source = new Array(shuffled.length)
+
+        if(showSource) {
+            source = new Array(shuffled.length)
+        }
+        
 
         for (let i = 0; i < shuffled.length; i++) {
             flatX[i] = shuffled[i].x;
             flatY[i] = shuffled[i].y;
-            source[i] = shuffled[i].source
+
+            if(showSource) {
+                source[i] = shuffled[i].source;
+            }
         }
     }
 
@@ -115,14 +135,29 @@ export const parseTrainingXY = ({
         labelCounts,
     };
 
-    const splitIndex = Math.floor(flatX.length * trainingSplit);
+    const startSize = arrObjSize - totalSize
 
-    let trainX = flatX.slice(0, splitIndex);
-    let trainY = flatY.slice(0, splitIndex);
-    let testX = flatX.slice(splitIndex);
-    let testY = flatY.slice(splitIndex);
-    let trainSource = source.slice(0, splitIndex);
-    let testSource = source.slice(splitIndex);
+    flatX.splice(0, startSize) //keeps the last items
+    flatY.splice(0, startSize) //keeps the last items
+
+    let trainX = flatX.slice(0, trainSize);
+    let trainY = flatY.slice(0, trainSize);
+
+
+    let testX = flatX.slice(-testSize);
+    let testY = flatY.slice(-testSize);
+    flatX = null
+    flatY = null
+
+    let trainSource
+    let testSource
+
+    if(showSource) {
+        source.splice(0, startSize) //keeps the last items
+        trainSource = source.slice(0, trainSize);
+        testSource = source.slice(-testSize);
+        source = null
+    }
 
     return {
         trainX,
@@ -133,7 +168,7 @@ export const parseTrainingXY = ({
         configY,
         trainSource,
         testSource
-    };
+    }
 };
 export const parseProductionX = ({
     arrObj = [],
@@ -142,6 +177,7 @@ export const parseProductionX = ({
     validateRows = () => true,
     shuffle = false,
     state = {},
+    showSource = false
 }) => {
     let flatX = [];
     let source = [];
@@ -149,6 +185,8 @@ export const parseProductionX = ({
 
     validateArray(arrObj, { min: 1 }, 'parseProductionX');
     validateFirstRow(arrObj[0]);
+
+    const arrObjSize = arrObj.length
 
     if (yCallbackFunc != null) {
         throw new Error('The property "yCallbackFunc" must not be set in "parseProductionX".');
@@ -179,7 +217,11 @@ export const parseProductionX = ({
             }
 
             flatX.push(rowX);
-            source.push(arrObj[x])
+
+            if(showSource) {
+                source.push(arrObj[x])
+            }
+            
 
         } catch(err) {
             throw new Error(`[BUG] - Skipped row index=${x}: ${err.message}`);
@@ -191,19 +233,29 @@ export const parseProductionX = ({
 
         for (let i = 0; i < flatX.length; i++) {
             merged[i] = {
-                x: flatX[i],
-                source: source[i]
+                x: flatX[i]
             };
+
+            if(showSource) {
+                merged[i].source = source[i]
+            }
         }
 
         const shuffled = arrayShuffle(merged);
 
         flatX = new Array(shuffled.length);
-        source = new Array(shuffled.length)
+
+        if(showSource) {
+            source = new Array(shuffled.length)
+        }
+        
 
         for (let i = 0; i < shuffled.length; i++) {
             flatX[i] = shuffled[i].x;
-            source[i] = shuffled[i].source
+
+            if(showSource) {
+                source[i] = shuffled[i].source
+            }
         }
     }
 

@@ -29,7 +29,8 @@ Builds supervised-learning datasets and splits them into training and testing ar
 #### Parameters
 
 - `arrObj` (Array<Object>): Source dataset.
-- `trainingSplit` (Number, optional): Fraction of rows used for training. Default: `0.8`.
+- `trainSize` (Number, required).
+- `testSize` (Number, required).
 - `yCallbackFunc` (Function, optional): Builds the output object for each row. Returning `null` or `undefined` skips the row.
 - `xCallbackFunc` (Function, optional): Builds the feature object for each row. Returning `null` or `undefined` skips the row.
 - `validateRows` (Function, optional): Extra row filter executed before the callbacks.

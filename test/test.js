@@ -31,6 +31,9 @@ const test = async () => {
 
     const arrObj = indicators.getData()
 
+    const trainSize = Math.round(arrObj.length * 0.8)
+    const testSize = arrObj.length - trainSize
+
     const {
         trainX,
         trainY,
@@ -40,7 +43,8 @@ const test = async () => {
         configY
     } = parseTrainingXY({
         arrObj,
-        trainingSplit: 0.50,
+        trainSize,
+        testSize,
         yCallbackFunc,
         xCallbackFunc,
         validateRows: ({objRow, index}) => {

@@ -1,6 +1,8 @@
 
 export const isNumber = v => v != null && Number.isFinite(v)
 
+export const isPositiveInteger = value =>  Number.isInteger(value) && value > 0
+
 export const isKeyPairObject = param => {
   return (
     param !== null &&
@@ -132,4 +134,24 @@ export const arraysAreNotEqualSize = (list, callerName) => {
     }
 
     return false
+}
+
+export const validateSizes = ({arrObjSize, trainSize, testSize}) => {
+
+    if(!isPositiveInteger(trainSize)) {
+        throw new Error(`Invalid property: "trainSize" (${trainSize}) must be a non-negative integer.`)
+    }
+    if(!isPositiveInteger(testSize)) {
+         throw new Error(`Invalid property: "testSize" (${testSize}) must be a non-negative integer.`)
+    }
+
+    if (!Number.isInteger(arrObjSize) || arrObjSize < 0) {
+        throw new Error(`Invalid property: "arrObjSize" (${arrObjSize}) must be a non-negative integer.`)
+    }
+
+    if(arrObjSize < (trainSize + testSize)) {
+        throw new Error(`Invalid property: The sum of "trainSize" + "testSize" (${trainSize + testSize}) must not be larger than "arrObj.length" (${arrObjSize}).`)
+    }
+
+    return true
 }
