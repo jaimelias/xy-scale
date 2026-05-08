@@ -1,6 +1,6 @@
 import { arrayShuffle } from "./utilities.js";
 import { validateFirstRow, validateArray, hasInvalidNumbers, validateSizes } from "./validators.js";
-import {zscore2d} from './zscore2.js'
+import {zscore} from './zscore.js'
 
 export const parseTrainingXY = ({
     arrObj = [],
@@ -152,7 +152,7 @@ export const parseTrainingXY = ({
     let stats = null
 
     if(scaling === 'zscore') {
-        let trainNormalized = zscore2d(trainX)
+        let trainNormalized = zscore(trainX)
         stats = trainNormalized.stats
         trainX = trainNormalized.data
         trainNormalized = null
@@ -161,7 +161,7 @@ export const parseTrainingXY = ({
     let testX = flatX.slice(-testSize);
 
     if(scaling === 'zscore') {
-        testX = zscore2d(testX, stats).data
+        testX = zscore(testX, stats).data
     }
 
     let testY = flatY.slice(-testSize);
@@ -292,7 +292,7 @@ export const parseProductionX = ({
     };
 
     if(scaling === 'zscore') {
-        flatX = zscore2d(flatX, stats).data
+        flatX = zscore(flatX, stats).data
     }
 
     return {

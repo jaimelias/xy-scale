@@ -44,10 +44,10 @@ const fitStats = (arr, cols) => {
     const row = arr[i];
 
     if (!Array.isArray(row)) {
-      throw new TypeError(`[zscore2d] Invalid row at index=${i}. Expected an array.`);
+      throw new TypeError(`[zscore] Invalid row at index=${i}. Expected an array.`);
     }
     if (row.length !== cols) {
-      throw new Error(`[zscore2d] Inconsistent row size at index=${i}. Expected ${cols}, got ${row.length}.`);
+      throw new Error(`[zscore] Inconsistent row size at index=${i}. Expected ${cols}, got ${row.length}.`);
     }
 
     for (let j = 0; j < cols; j++) {
@@ -84,10 +84,10 @@ const scaleFromStats = (arr, normalizedStats) => {
     const row = arr[i];
 
     if (!Array.isArray(row)) {
-      throw new TypeError(`[zscore2d] Invalid row at index=${i}. Expected an array.`);
+      throw new TypeError(`[zscore] Invalid row at index=${i}. Expected an array.`);
     }
     if (row.length !== cols) {
-      throw new Error(`[zscore2d] Inconsistent row size at index=${i}. Expected ${cols}, got ${row.length}.`);
+      throw new Error(`[zscore] Inconsistent row size at index=${i}. Expected ${cols}, got ${row.length}.`);
     }
 
     const normalized = new Array(cols);
@@ -106,9 +106,9 @@ const scaleFromStats = (arr, normalizedStats) => {
   return out;
 };
 
-export const zscore2d = (arr, stats = null) => {
+export const zscore = (arr, stats = null) => {
   if (!Array.isArray(arr)) {
-    throw new TypeError('[zscore2d] "arr" must be a 2D array.');
+    throw new TypeError('[zscore] "arr" must be a 2D array.');
   }
 
   if (arr.length === 0) {
@@ -126,7 +126,7 @@ export const zscore2d = (arr, stats = null) => {
 
   const firstRow = arr[0];
   if (!Array.isArray(firstRow)) {
-    throw new TypeError('[zscore2d] "arr" must be a 2D array of rows.');
+    throw new TypeError('[zscore] "arr" must be a 2D array of rows.');
   }
 
   const cols = firstRow.length;
