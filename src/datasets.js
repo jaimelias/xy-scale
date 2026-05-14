@@ -1,5 +1,5 @@
 import { arrayShuffle } from "./utilities.js";
-import { validateFirstRow, validateArray, hasInvalidNumbers, validateSizes } from "./validators.js";
+import { validateFirstRow, validateArray, hasInvalidNumbers, validateSizes, isNumber } from "./validators.js";
 import {zscore} from './zscore.js'
 
 export const parseTrainingXY = ({
@@ -46,7 +46,10 @@ export const parseTrainingXY = ({
             if (parsedX == null || parsedY == null) continue;
 
             if (hasInvalidNumbers(parsedX, 'parseTrainingXY')) {
-               throw new Error(`Invalid numeric value returned from "xCallbackFunc".`);
+
+                const invalids = Object.entries(parsedX).find(arr => !isNumber(arr[1]))
+
+                throw new Error(`Invalid numeric value returned from "xCallbackFunc": ${JSON.stringify(invalids)}`);
             }
 
             if (keyNamesX === null) {
@@ -229,7 +232,10 @@ export const parseProductionX = ({
             if (parsedX == null) continue;
 
             if (hasInvalidNumbers(parsedX, 'parseProductionX')) {
-                throw new Error(`Invalid numeric value returned from "xCallbackFunc".`);
+
+                const invalids = Object.entries(parsedX).find(arr => !isNumber(arr[1]))
+
+                throw new Error(`Invalid numeric value returned from "xCallbackFunc": ${JSON.stringify(invalids)}`);
             }
 
             if (keyNamesX === null) {
