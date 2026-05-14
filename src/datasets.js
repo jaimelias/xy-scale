@@ -47,7 +47,7 @@ export const parseTrainingXY = ({
 
             if (hasInvalidNumbers(parsedX, 'parseTrainingXY')) {
 
-                const invalids = Object.entries(parsedX).find(arr => !isNumber(arr[1]))
+                const invalids = Object.entries(parsedX).filter(arr => !isNumber(arr[1]))
 
                 throw new Error(`Invalid numeric value returned from "xCallbackFunc": ${JSON.stringify(invalids)}`);
             }
@@ -233,7 +233,7 @@ export const parseProductionX = ({
 
             if (hasInvalidNumbers(parsedX, 'parseProductionX')) {
 
-                const invalids = Object.entries(parsedX).find(arr => !isNumber(arr[1]))
+                const invalids = Object.entries(parsedX).filter(arr => !isNumber(arr[1]))
 
                 throw new Error(`Invalid numeric value returned from "xCallbackFunc": ${JSON.stringify(invalids)}`);
             }

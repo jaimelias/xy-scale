@@ -1,6 +1,6 @@
 {
   "name": "xy-scale",
-  "version": "1.4.47",
+  "version": "1.4.48",
   "main": "./index.js",
   "type": "module",
   "scripts": {
