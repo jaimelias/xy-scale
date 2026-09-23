@@ -31,8 +31,19 @@ const test = async () => {
 
     const arrObj = indicators.getData()
 
-    const trainSize = Math.round(arrObj.length * 0.8)
-    const testSize = arrObj.length - trainSize
+    const validateRows = ({objRow, index}) => {
+        const curr = objRow[index]
+        const prev = objRow[index - 1]
+
+        if(typeof prev === 'undefined') return false
+
+        return !Number.isNaN(curr.sma_200) && !Number.isNaN(prev.sma_200) && curr.sma_200 > prev.sma_200
+    }
+
+    const eligibleSize = arrObj.reduce((count, _, index) =>
+        count + Number(index < arrObj.length - 1 && validateRows({objRow: arrObj, index})), 0)
+    const trainSize = Math.round(eligibleSize * 0.8)
+    const testSize = eligibleSize - trainSize
 
     const {
         trainX,
@@ -48,19 +59,8 @@ const test = async () => {
         testSize,
         yCallbackFunc,
         xCallbackFunc,
-        validateRows: ({objRow, index}) => {
-
-            const curr = objRow[index]
-            const prev = objRow[index - 1]
-
-            if(typeof prev === 'undefined') return false //return false or null or undefined to continue to skip this row
-
-            if(!Number.isNaN(curr.sma_200) && !Number.isNaN(prev.sma_200)  && curr.sma_200 > prev.sma_200) return true //return true to include this row in dataset
-
-            return false
-        },
+        validateRows,
         shuffle: false,
-        balancing: null,
     });
 
     console.log(configX.keyNames)

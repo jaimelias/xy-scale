@@ -1,34 +1,47 @@
 const toArray = typedOrArray => Array.from(typedOrArray);
 
-const normalizeStats = (stats, cols) => {
+const serializeStats = ({ mean, std, scale, count }) => ({
+  mean: toArray(mean),
+  std: toArray(std),
+  scale: toArray(scale),
+  count: toArray(count)
+});
+
+const validateStats = (stats, cols) => {
+  if (stats === null || typeof stats !== 'object' || Array.isArray(stats)) {
+    throw new TypeError('[zscore] "stats" must be an object containing mean, std, scale, and count arrays.');
+  }
+
+  for (const key of ['mean', 'std', 'scale', 'count']) {
+    if (!Array.isArray(stats[key]) || stats[key].length !== cols) {
+      throw new TypeError(`[zscore] "stats.${key}" must be an array with ${cols} items.`);
+    }
+  }
+
   const mean = new Float64Array(cols);
   const std = new Float64Array(cols);
   const scale = new Float64Array(cols);
   const count = new Uint32Array(cols);
 
-  const meanIn = Array.isArray(stats?.mean) ? stats.mean : [];
-  const stdIn = Array.isArray(stats?.std) ? stats.std : [];
-  const scaleIn = Array.isArray(stats?.scale) ? stats.scale : [];
-  const countIn = Array.isArray(stats?.count) ? stats.count : [];
-
   for (let j = 0; j < cols; j++) {
-    const m = Number(meanIn[j]);
-    const s = Number(stdIn[j]);
-    const sc = Number(scaleIn[j]);
-    const c = Number(countIn[j]);
+    const m = stats.mean[j];
+    const s = stats.std[j];
+    const sc = stats.scale[j];
+    const c = stats.count[j];
 
-    mean[j] = Number.isFinite(m) ? m : 0;
-    std[j] = Number.isFinite(s) && s > 0 ? s : 0;
-    count[j] = Number.isFinite(c) && c > 0 ? c : 0;
-
-    if (Number.isFinite(sc) && sc > 0) {
-      scale[j] = sc;
-      if (!(std[j] > 0)) { std[j] = 1 / sc; }
-    } else if (std[j] > 0) {
-      scale[j] = 1 / std[j];
-    } else {
-      scale[j] = 0;
+    if (typeof m !== 'number' || !Number.isFinite(m) ||
+        typeof s !== 'number' || !Number.isFinite(s) || s < 0 ||
+        typeof sc !== 'number' || !Number.isFinite(sc) || sc < 0 ||
+        !Number.isInteger(c) || c < 0 || c > 0xffffffff ||
+        (s === 0) !== (sc === 0) ||
+        (s > 0 && (c < 2 || Math.abs(s * sc - 1) > 8 * Number.EPSILON))) {
+      throw new TypeError(`[zscore] Invalid fitted statistics at column ${j}.`);
     }
+
+    mean[j] = m;
+    std[j] = s;
+    scale[j] = sc;
+    count[j] = c;
   }
 
   return { mean, std, scale, count };
@@ -66,10 +79,18 @@ const fitStats = (arr, cols) => {
   const scale = new Float64Array(cols);
 
   for (let j = 0; j < cols; j++) {
+    if (!Number.isFinite(mean[j]) || !Number.isFinite(m2[j])) {
+      throw new RangeError(`[zscore] Cannot fit finite statistics at column ${j}.`);
+    }
+
     const variance = count[j] > 1 ? (m2[j] / count[j]) : 0;
     const s = variance > 0 ? Math.sqrt(variance) : 0;
     std[j] = s;
     scale[j] = s > 0 ? (1 / s) : 0;
+
+    if (!Number.isFinite(std[j]) || !Number.isFinite(scale[j])) {
+      throw new RangeError(`[zscore] Cannot fit finite statistics at column ${j}.`);
+    }
   }
 
   return { mean, std, scale, count };
@@ -95,9 +116,13 @@ const scaleFromStats = (arr, normalizedStats) => {
       const x = Number(row[j]);
       const sc = normalizedStats.scale[j];
 
-      normalized[j] = (Number.isFinite(x) && sc > 0)
+      const scaled = (Number.isFinite(x) && sc > 0)
         ? (x - normalizedStats.mean[j]) * sc
         : 0;
+      if (!Number.isFinite(scaled)) {
+        throw new RangeError(`[zscore] Cannot scale row ${i}, column ${j} to a finite number.`);
+      }
+      normalized[j] = scaled;
     }
 
     out[i] = normalized;
@@ -112,14 +137,11 @@ export const zscore = (arr, stats = null) => {
   }
 
   if (arr.length === 0) {
-    const normalizedStats = normalizeStats(stats ?? {}, 0);
+    const normalizedStats = stats == null
+      ? fitStats(arr, 0)
+      : validateStats(stats, Array.isArray(stats?.mean) ? stats.mean.length : 0);
     return {
-      stats: {
-        mean: toArray(normalizedStats.mean),
-        std: toArray(normalizedStats.std),
-        scale: toArray(normalizedStats.scale),
-        count: toArray(normalizedStats.count)
-      },
+      stats: serializeStats(normalizedStats),
       data: []
     };
   }
@@ -130,16 +152,11 @@ export const zscore = (arr, stats = null) => {
   }
 
   const cols = firstRow.length;
-  const normalizedStats = stats ? normalizeStats(stats, cols) : fitStats(arr, cols);
+  const normalizedStats = stats == null ? fitStats(arr, cols) : validateStats(stats, cols);
   const data = scaleFromStats(arr, normalizedStats);
 
   return {
-    stats: {
-      mean: toArray(normalizedStats.mean),
-      std: toArray(normalizedStats.std),
-      scale: toArray(normalizedStats.scale),
-      count: toArray(normalizedStats.count)
-    },
+    stats: serializeStats(normalizedStats),
     data
   };
 };

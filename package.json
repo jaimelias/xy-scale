@@ -1,11 +1,11 @@
 {
   "name": "xy-scale",
-  "version": "1.4.48",
+  "version": "1.4.50",
   "main": "./index.js",
   "type": "module",
   "scripts": {
     "build": "npx webpack",
-    "test": "node test/test.js"
+    "test": "node --test test/*.test.js && node test/test.js"
   },
   "author": "",
   "license": "ISC",

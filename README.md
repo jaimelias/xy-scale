@@ -4,9 +4,7 @@ Machine learning data preparation helpers for JavaScript.
 
 ## Overview
 
-`xy-scale.js` now focuses on turning already-prepared row objects into flat `X` and `Y` arrays for training or production use.
-
-The library no longer scales values internally. Your `arrObj` input, or the objects returned by your callbacks, should already contain the numeric or boolean values you want to feed into a model.
+`xy-scale.js` turns row objects into flat `X` and `Y` arrays for training or production use. Feature values must be finite numbers. Scaling is optional: `scaling: 'zscore'` fits statistics on training features and applies those same statistics to test or production features.
 
 ## Installation
 
@@ -17,7 +15,7 @@ npm install xy-scale
 ## Exports
 
 ```javascript
-import { parseTrainingXY, parseProductionX, arrayToTimesteps } from 'xy-scale';
+import { parseTrainingXY, parseProductionX, arrayToTimesteps, arrayShuffle, zscore } from 'xy-scale';
 ```
 
 ## Main functions
@@ -29,21 +27,26 @@ Builds supervised-learning datasets and splits them into training and testing ar
 #### Parameters
 
 - `arrObj` (Array<Object>): Source dataset.
-- `trainSize` (Number, required).
-- `testSize` (Number, required).
-- `yCallbackFunc` (Function, optional): Builds the output object for each row. Returning `null` or `undefined` skips the row.
+- `trainSize` (positive integer, required): Number of eligible rows to return for training.
+- `testSize` (non-negative integer, required): Number of eligible rows to return for testing.
+- `yCallbackFunc` (Function, optional): Builds the label object for each row. Returning `null` or `undefined` skips the row.
 - `xCallbackFunc` (Function, optional): Builds the feature object for each row. Returning `null` or `undefined` skips the row.
 - `validateRows` (Function, optional): Extra row filter executed before the callbacks.
 - `shuffle` (Boolean, optional): Shuffles `X` and `Y` together before splitting. Default: `false`.
-- `balancing` (String, optional): Accepts `oversample` or `undersample`.
 - `state` (Object, optional): Shared mutable state passed into callbacks.
+- `showSource` (Boolean, optional): Includes the source rows in `trainSource` and `testSource`.
+- `scaling` (`null` or `'zscore'`, optional): Fits scaling statistics on training rows only.
+
+Each callback receives `{ objRow, index, state }`. By default, both callbacks return `objRow[index]`. After filtering, the function keeps the last `trainSize + testSize` eligible rows (or a random subset when shuffled). It throws if too few eligible rows remain.
 
 #### Returns
 
 - `trainX`, `trainY`
 - `testX`, `testY`
 - `configX`: `{ keyNames: [...] }`
-- `configY`: `{ keyNames: [...] }`
+- `configY`: `{ keyNames: [...], labelCounts: {...} }` for the returned rows
+- `stats`: Fitted statistics and feature key order when `scaling: 'zscore'`, otherwise `null`
+- `trainSource`, `testSource`: Source rows when `showSource: true`
 
 `configX.keyNames` and `configY.keyNames` preserve the object-key order used when flattening each callback result into an array.
 
@@ -54,15 +57,19 @@ Builds production-ready feature arrays from already-prepared rows.
 #### Parameters
 
 - `arrObj` (Array<Object>): Source dataset.
-- `xCallbackFunc` (Function, optional): Builds the feature object for each row. Returning `null`, `undefined`, or `false` skips the row.
+- `xCallbackFunc` (Function, optional): Builds the feature object for each row. Returning `null`, `undefined`, or `false` skips the row. Defaults to the current source row.
 - `validateRows` (Function, optional): Extra row filter executed before the callback.
 - `shuffle` (Boolean, optional): Shuffles the final `X` rows. Default: `false`.
 - `state` (Object, optional): Shared mutable state passed into the callback.
+- `showSource` (Boolean, optional): Includes source rows in the result.
+- `scaling` (`null` or `'zscore'`, optional): Applies z-score scaling to production features.
+- `stats` (Object, required when scaling): Statistics returned by `parseTrainingXY` during training, including feature key order.
 
 #### Returns
 
 - `X`
 - `configX`: `{ keyNames: [...] }`
+- `source`: Source rows when `showSource: true`; otherwise `[]`
 
 ### arrayToTimesteps
 
@@ -71,9 +78,8 @@ Converts a flat array into overlapping sequences for time-series models.
 #### Parameters
 
 - `arr` (Array): Input array.
-- `timeSteps` (Number): Length of each sequence.
-  - If `timeSteps === 0`, returns the original array.
-  - If `timeSteps < 0`, throws an error.
+- `timeSteps` (positive integer): Length of each sequence.
+- `step` (positive integer, optional): Number of positions between windows. Default: `1`.
 
 #### Returns
 
@@ -96,7 +102,8 @@ const candles = [
 
 const { trainX, trainY, testX, testY, configX, configY } = parseTrainingXY({
   arrObj: candles,
-  trainingSplit: 0.8,
+  trainSize: 4,
+  testSize: 2,
   shuffle: true,
   xCallbackFunc: ({ objRow, index }) => ({
     close: objRow[index].closeScaled,
@@ -122,9 +129,8 @@ console.log(inputX, targetY);
 
 ## Notes
 
-- `parseTrainingXY` and `parseProductionX` do not scale values.
-- If you need scaling, do it before passing data into this library.
-- Callback return objects are flattened with `Object.values(...)`, using the same key order stored in `configX.keyNames` and `configY.keyNames`.
+- Callback return objects are flattened using the key order stored in `configX.keyNames` and `configY.keyNames`. Every included row must return the same keys.
+- When using z-score scaling in production, pass the training result's `stats` to `parseProductionX`. Production features must have the same names and order as training features.
 
 ## License
 
